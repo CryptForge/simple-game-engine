@@ -1,0 +1,8 @@
+# Project exclude paths
+/.gradle/
+/build/
+/build/classes/java/main/
+/engine/build/
+/engine/build/classes/java/main/
+/game/build/
+/game/build/classes/java/main/
