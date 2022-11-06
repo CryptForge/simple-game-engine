@@ -24,10 +24,10 @@ import static org.lwjgl.opengl.GL33.*;
 public abstract class Application {
 
     private final long windowId;
-    private final String title;
     private final int worldWidth, worldHeight;
     private int width, height;
-    private final Map<Integer, Integer> keyMap;
+    private final Map<Integer, Integer> keyboardMap;
+    private final Map<Integer, Integer> mouseMap;
     private Renderer renderer;
 
     private int targetFramerate;
@@ -35,15 +35,15 @@ public abstract class Application {
 
     /**
      * Creates a window
-     * @param title Window title
-     * @param width Initial window width
-     * @param height Initial window height
-     * @param resizeable Can window be resized
+     *
+     * @param title           Window title
+     * @param width           Initial window width
+     * @param height          Initial window height
+     * @param resizeable      Can window be resized
      * @param targetFramerate Framerate cap
-     * @param vsync V-Sync
+     * @param vsync           V-Sync
      */
-    public Application(String title, int width, int height,boolean resizeable, int targetFramerate, boolean vsync) {
-        this.title = title;
+    public Application(String title, int width, int height, boolean resizeable, int targetFramerate, boolean vsync) {
         this.worldWidth = width;
         this.worldHeight = height;
         this.width = width;
@@ -51,7 +51,8 @@ public abstract class Application {
         this.targetFramerate = targetFramerate;
         this.vsync = vsync;
 
-        keyMap = new HashMap<>();
+        keyboardMap = new HashMap<>();
+        mouseMap = new HashMap<>();
 
         // Init GLFW
         GLFWErrorCallback.createPrint(System.err).set();
@@ -89,7 +90,8 @@ public abstract class Application {
 
     /**
      * Called on a keyboard event
-     * @param key Keyboard key
+     *
+     * @param key    Keyboard key
      * @param action Action type
      */
     public void onKey(KeyboardKey key, InputAction action) {
@@ -97,10 +99,11 @@ public abstract class Application {
 
     /**
      * Called on a mouse event
+     *
      * @param button Mouse button
      * @param action Action type
-     * @param x Clicked coordinate in world space
-     * @param y Clicked coordinate in world space
+     * @param x      Clicked coordinate in world space
+     * @param y      Clicked coordinate in world space
      */
     public void onMouse(MouseButton button, InputAction action, float x, float y) {
     }
@@ -141,8 +144,8 @@ public abstract class Application {
             double deltaTime = glfwGetTime() - oldTime;
             oldTime = glfwGetTime();
 
-            if(Math.abs(deltaTime - 1.0/60.0) < .0002){
-                deltaTime = 1.0/60.0;
+            if (Math.abs(deltaTime - 1.0 / 60.0) < .0002) {
+                deltaTime = 1.0 / 60.0;
             }
             accumulator += deltaTime;
 
@@ -169,7 +172,7 @@ public abstract class Application {
         final KeyboardKey input = KeyboardKey.fromGlfw(key);
 
         if (inputAction != InputAction.REPEAT) {
-            keyMap.put(key, action);
+            keyboardMap.put(key, action);
         }
 
         if (input == null) {
@@ -188,6 +191,7 @@ public abstract class Application {
             System.err.println("Mouse Button \"" + button + "\" not supported");
             return;
         }
+        mouseMap.put(button, action);
 
         final double x, y;
         try (final MemoryStack stack = stackPush()) {
@@ -203,7 +207,6 @@ public abstract class Application {
         final Vector2f worldPos = renderer.convertMouseToWorld((float) x, (float) y);
 
         onMouse(mouseButton, inputAction, worldPos.x, worldPos.y);
-
     }
 
     /**
@@ -215,13 +218,31 @@ public abstract class Application {
 
     /**
      * Checks if a key is pressed
+     *
      * @param key Key to check
      * @return If the key is currently pressed
      */
     public boolean isKeyPressed(@NotNull KeyboardKey key) {
-        if (!keyMap.containsKey(key.glfwKey()))
+        if (!keyboardMap.containsKey(key.glfwKey()))
             return false;
-        return keyMap.get(key.glfwKey()) == GLFW_PRESS;
+        return keyboardMap.get(key.glfwKey()) == GLFW_PRESS;
+    }
+
+    public boolean isMouseButtonPressed(@NotNull MouseButton button) {
+        if (!mouseMap.containsKey(button.glfwKey()))
+            return false;
+        return mouseMap.get(button.glfwKey()) == GLFW_PRESS;
+    }
+
+    public Vector2f getMousePosition() {
+        try (final MemoryStack stack = MemoryStack.stackPush()) {
+            final DoubleBuffer xBuffer = stack.mallocDouble(1);
+            final DoubleBuffer yBuffer = stack.mallocDouble(1);
+
+            glfwGetCursorPos(windowId, xBuffer, yBuffer);
+
+            return renderer.convertMouseToWorld((float) xBuffer.get(0), (float) yBuffer.get(0));
+        }
     }
 
     /**
@@ -256,6 +277,7 @@ public abstract class Application {
 
     /**
      * Enables or disables v-sync
+     *
      * @param vsync State
      */
     public void setVsync(boolean vsync) {
@@ -266,6 +288,7 @@ public abstract class Application {
     /**
      * Gets the width of the window
      * Can change if window is resizeable
+     *
      * @return Window width
      */
     public int getWidth() {
@@ -275,6 +298,7 @@ public abstract class Application {
     /**
      * Gets the height of the window
      * Can change if window is resizeable
+     *
      * @return Window height
      */
     public int getHeight() {
@@ -283,6 +307,7 @@ public abstract class Application {
 
     /**
      * Gets the width of the game world
+     *
      * @return World width
      */
     public int getWorldWidth() {
@@ -291,6 +316,7 @@ public abstract class Application {
 
     /**
      * Gets the height of the game world
+     *
      * @return World height
      */
     public int getWorldHeight() {
@@ -299,6 +325,7 @@ public abstract class Application {
 
     /**
      * Gets the window handle
+     *
      * @return Window handle
      */
     public long getWindowId() {

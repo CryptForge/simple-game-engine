@@ -1,27 +1,27 @@
 package me.cryptforge.engine;
 
-import org.jetbrains.annotations.ApiStatus;
-import org.joml.Vector2f;
-import org.joml.Vector3d;
-import org.joml.Vector3f;
+import me.cryptforge.engine.asset.Texture;
 
 /**
  * Builder to simplify sprite drawing
  */
-@ApiStatus.AvailableSince("1.0")
 public class SpriteBuilder {
 
     private final Renderer renderer;
-    private final Texture texture;
+    private Texture texture;
 
     private float posX, posY;
     private float sizeX = 10f, sizeY = 10f;
     private float r = 1f, g = 1f, b = 1f;
     private float rotation;
 
-    protected SpriteBuilder(Renderer renderer, Texture texture) {
+    protected SpriteBuilder(Renderer renderer) {
         this.renderer = renderer;
+    }
+
+    public SpriteBuilder texture(Texture texture) {
         this.texture = texture;
+        return this;
     }
 
     public SpriteBuilder position(float x, float y) {
@@ -52,6 +52,20 @@ public class SpriteBuilder {
         this.r = (float) r;
         this.g = (float) g;
         this.b = (float) b;
+        return this;
+    }
+
+    public SpriteBuilder reset() {
+        texture = null;
+        posX = 0f;
+        posY = 0f;
+        sizeX = 10f;
+        sizeY = 10f;
+        rotation = 0f;
+        r = 1f;
+        g = 1f;
+        b = 1f;
+
         return this;
     }
 

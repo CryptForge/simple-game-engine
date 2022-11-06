@@ -2,7 +2,7 @@ package me.cryptforge.game;
 
 import me.cryptforge.engine.Application;
 import me.cryptforge.engine.Renderer;
-import me.cryptforge.engine.Texture;
+import me.cryptforge.engine.asset.*;
 import me.cryptforge.engine.input.InputAction;
 import me.cryptforge.engine.input.KeyboardKey;
 import me.cryptforge.engine.input.MouseButton;
@@ -10,50 +10,79 @@ import org.joml.Vector2f;
 
 public class Main extends Application {
 
+
     private final Vector2f position;
-    private final float sizeX = 50f ,sizeY = 50f;
+    private final float sizeX = 50f, sizeY = 50f;
     private Texture texture;
+    private Texture buttonTexture;
+    private Texture buttonPressedTexture;
+    private Button button;
     double time = 0;
 
 
     public Main() {
-        super("game engine test", 800, 480, false,60,true);
-        position = new Vector2f(0,0);
+        super("game engine test", 800, 480, true, 60, true);
+        position = new Vector2f(0, 0);
     }
 
     @Override
     public void init() {
-        texture = new Texture("assets/textures/test.png");
+        texture = AssetManager.loadTexture(
+                "test",
+                AssetPathType.FILE,
+                "assets/textures/test.png",
+                TextureSettings.builder()
+                               .generateMipmap(true)
+                               .downscaleFilter(TextureFilter.LINEAR_MIPMAP_LINEAR)
+                               .build()
+        );
+
+
+        final TextureSettings buttonSettings = TextureSettings.builder()
+                                                              .upscaleFilter(TextureFilter.NEAREST)
+                                                              .downscaleFilter(TextureFilter.NEAREST)
+                                                              .build();
+        buttonTexture = AssetManager.loadTexture("button", AssetPathType.FILE, "assets/textures/button.png", buttonSettings);
+        buttonPressedTexture = AssetManager.loadTexture("button_pressed", AssetPathType.FILE, "assets/textures/button_pressed.png", buttonSettings);
+        button = new Button(
+                buttonTexture,
+                200, 40,
+                10, 10,
+                () -> {
+                    System.out.println("Button pressed");
+                }
+        );
     }
 
     @Override
     public void update() {
         time += 0.05;
-        final Vector2f movement = new Vector2f(0,0);
-        if(isKeyPressed(KeyboardKey.A)) {
+
+        final Vector2f movement = new Vector2f(0, 0);
+        if (isKeyPressed(KeyboardKey.A)) {
             movement.x -= 1;
         }
-        if(isKeyPressed(KeyboardKey.D)) {
+        if (isKeyPressed(KeyboardKey.D)) {
             movement.x += 1;
         }
-        if(isKeyPressed(KeyboardKey.W)) {
+        if (isKeyPressed(KeyboardKey.W)) {
             movement.y -= 1;
         }
-        if(isKeyPressed(KeyboardKey.S)) {
+        if (isKeyPressed(KeyboardKey.S)) {
             movement.y += 1;
         }
 
-        if(movement.lengthSquared() == 0)
+        if (movement.lengthSquared() == 0)
             return;
 
         movement.normalize();
 
         movement.mul(2.5f);
 
-        if(position.x + movement.x < 0 || position.x + movement.x + sizeX > getWorldWidth()) {
+        if (position.x + movement.x < 0 || position.x + movement.x + sizeX > getWorldWidth()) {
             movement.x = 0;
         }
-        if(position.y + movement.y < 0 || position.y + movement.y + sizeY > getWorldHeight()) {
+        if (position.y + movement.y < 0 || position.y + movement.y + sizeY > getWorldHeight()) {
             movement.y = 0;
         }
 
@@ -62,22 +91,34 @@ public class Main extends Application {
 
     @Override
     public void onKey(KeyboardKey key, InputAction action) {
-        if(key == KeyboardKey.ESC && action == InputAction.PRESSED) {
+        if (key == KeyboardKey.ESC && action == InputAction.PRESSED) {
             exit();
         }
     }
 
     @Override
     public void onMouse(MouseButton button, InputAction action, float x, float y) {
-        if(action != InputAction.PRESSED)
+        if (action != InputAction.PRESSED)
             return;
-        position.x = x - sizeX / 2;
+        if (this.button.isInBounds((int) x, (int) y)) {
+            this.button.getCallback().run();
+            return;
+        }
         position.y = y - sizeY / 2;
+        position.x = x - sizeX / 2;
+
     }
 
     @Override
     public void render(Renderer renderer) {
         renderer.clear(0, 0, 120, 1f);
+
+        final Vector2f mousePos = getMousePosition();
+        if (button.isInBounds((int) mousePos.x, (int) mousePos.y)) {
+            button.setTexture(buttonPressedTexture);
+        } else {
+            button.setTexture(buttonTexture);
+        }
 
         for (int i = 0; i < 11; i++) {
             int x = i * 75;
@@ -86,15 +127,17 @@ public class Main extends Application {
                 renderer.sprite(texture)
                         .position(x, y)
                         .size(75, 75)
-                        .color(Math.sin(time + x + y) * 0.75,-Math.sin(time + x + y) * 0.75,0)
+                        .color(Math.sin(time + x + y) * 0.75f, -Math.sin(time + x + y) * 0.75f, 0)
                         .draw();
             }
         }
 
         renderer.sprite(texture)
-                .position(position.x,position.y)
-                .size(sizeX,sizeY)
+                .position(position.x, position.y)
+                .size(sizeX, sizeY)
                 .draw();
+
+        button.draw(renderer);
     }
 
     public static void main(String[] args) {

@@ -1,18 +1,22 @@
 package me.cryptforge.engine;
 
-import org.jetbrains.annotations.ApiStatus;
+import me.cryptforge.engine.asset.AssetManager;
+import me.cryptforge.engine.asset.AssetPathType;
+import me.cryptforge.engine.asset.Shader;
+import me.cryptforge.engine.asset.Texture;
 import org.joml.*;
 
 import java.lang.Math;
 
 import static org.lwjgl.opengl.GL33.*;
 
-@ApiStatus.Experimental
 public class Renderer {
 
     private final Application application;
 
     private final Matrix3x2f projectionMatrix;
+    private final Matrix4f modelMatrix;
+    private final SpriteBuilder cachedBuilder;
 
     private final Shader spriteShader;
     private final int quadVAO;
@@ -20,11 +24,13 @@ public class Renderer {
     protected Renderer(Application application) {
         this.application = application;
 
+        cachedBuilder = new SpriteBuilder(this);
+        modelMatrix = new Matrix4f();
         projectionMatrix = new Matrix3x2f()
                 .view(0f, application.getWidth(), application.getHeight(), 0f);
 
         // init sprite rendering
-        spriteShader = new Shader("/shaders/simple.vert", "/shaders/simple.frag");
+        spriteShader = AssetManager.loadShader("sprite", AssetPathType.RESOURCE, "shaders/sprite");
         spriteShader.use();
         spriteShader.setInt("image", 0);
         spriteShader.setProjectionMatrix("projection", projectionMatrix);
@@ -54,9 +60,10 @@ public class Renderer {
 
     /**
      * Clears the screen with specified color
-     * @param red Red (0-255)
+     *
+     * @param red   Red (0-255)
      * @param green Green (0-255)
-     * @param blue Blue (0-255)
+     * @param blue  Blue (0-255)
      * @param alpha Alpha (0-1)
      */
     public void clear(int red, int green, int blue, float alpha) {
@@ -70,24 +77,25 @@ public class Renderer {
 
     /**
      * Creates a sprite builder
+     *
      * @param texture Texture to draw
      * @return A new sprite builder
      */
     public SpriteBuilder sprite(Texture texture) {
-        return new SpriteBuilder(this, texture);
+        return cachedBuilder.reset().texture(texture);
     }
 
     public void drawSprite(Texture texture, float posX, float posY, float sizeX, float sizeY, float rotation, float r, float g, float b) {
         spriteShader.use();
 
-        final Matrix4f model = new Matrix4f()
-                .translate(posX, posY, 0)
-                .translate(0.5f * sizeX, 0.5f * sizeY, 0f)
-                .rotate((float) Math.toRadians(rotation), 0, 0, 1)
-                .translate(-0.5f * sizeX, -0.5f * sizeY, 0f)
-                .scale(sizeX, sizeY, 0);
+        modelMatrix.identity()
+                   .translate(posX, posY, 0)
+                   .translate(0.5f * sizeX, 0.5f * sizeY, 0f)
+                   .rotate((float) Math.toRadians(rotation), 0, 0, 1)
+                   .translate(-0.5f * sizeX, -0.5f * sizeY, 0f)
+                   .scale(sizeX, sizeY, 0);
 
-        spriteShader.setMatrix4f("model", model);
+        spriteShader.setMatrix4f("model", modelMatrix);
         spriteShader.setVector3f("spriteColor", r, g, b);
 
         glActiveTexture(GL_TEXTURE0);
@@ -99,11 +107,11 @@ public class Renderer {
     }
 
     public Vector2f convertMouseToWorld(float mouseX, float mouseY) {
-        return new Matrix3x2f(projectionMatrix)
+        return projectionMatrix
                 .unproject(
                         mouseX,
                         application.getHeight() - mouseY,
-                        new int[] {0,0,application.getWidth(),application.getHeight()},
+                        new int[]{0, 0, application.getWidth(), application.getHeight()},
                         new Vector2f()
                 );
     }
