@@ -2,12 +2,17 @@ package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.Application;
 import me.cryptforge.engine.asset.*;
-import me.cryptforge.engine.asset.Font;
-import org.joml.*;
+import org.joml.Matrix3x2f;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.lwjgl.stb.STBTTAlignedQuad;
+import org.lwjgl.system.MemoryStack;
 
-import java.lang.Math;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.stb.STBTruetype.*;
 
 public class Renderer {
 
@@ -18,10 +23,12 @@ public class Renderer {
     private final SpriteBuilder cachedBuilder;
 
     private final Shader spriteShader;
+    private final Shader textShader;
     private final VertexArrayObject vao;
     private final VertexBufferObject vbo;
 
     private final VertexBuffer vertexBuffer;
+
     private boolean isDrawing;
 
     public Renderer(Application application) {
@@ -29,6 +36,7 @@ public class Renderer {
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 
 
         cachedBuilder = new SpriteBuilder(this);
@@ -42,7 +50,13 @@ public class Renderer {
         spriteShader.use();
         spriteShader.setInt("image", 0);
         spriteShader.setProjectionMatrix("projection", projectionMatrix);
-        spriteShader.setMatrix4f("model",new Matrix4f());
+        spriteShader.setMatrix4f("model", new Matrix4f());
+
+        // init text rendering
+        textShader = AssetManager.loadShader("text", AssetPathType.RESOURCE, "shaders/text");
+        textShader.use();
+        textShader.setInt("text", 0);
+        textShader.setProjectionMatrix("projection", projectionMatrix);
 
         vao = new VertexArrayObject();
         vbo = new VertexBufferObject();
@@ -101,12 +115,12 @@ public class Renderer {
     public void drawSprite(Texture texture, float posX, float posY, float sizeX, float sizeY, float rotation, float r, float g, float b) {
         spriteShader.use();
 
-//        modelMatrix.identity()
-//                   .translate(posX, posY, 0)
-//                   .translate(0.5f * sizeX, 0.5f * sizeY, 0f)
-//                   .rotate((float) Math.toRadians(rotation), 0, 0, 1)
-//                   .translate(-0.5f * sizeX, -0.5f * sizeY, 0f)
-//                   .scale(sizeX, sizeY, 0);
+        modelMatrix.identity()
+                   .translate(posX, posY, 0)
+                   .translate(0.5f * sizeX, 0.5f * sizeY, 0f)
+                   .rotate((float) Math.toRadians(rotation), 0, 0, 1)
+                   .translate(-0.5f * sizeX, -0.5f * sizeY, 0f)
+                   .scale(sizeX, sizeY, 0);
 
         spriteShader.setMatrix4f("model", modelMatrix);
 
@@ -132,7 +146,7 @@ public class Renderer {
 //        vertexBuffer.add(0,1,1,1,1,1,0,1);
 //        vertexBuffer.add(1,1,1,1,1,1,1,1);
 //        vertexBuffer.add(1,0,1,1,1,1,1,0);
-        drawTexture(texture,posX,posY,Color.WHITE);
+        drawTexture(texture, posX, posY, Color.WHITE);
         end();
     }
 
@@ -171,36 +185,65 @@ public class Renderer {
         float s2 = 1f;
         float t2 = 1f;
 
-        drawTexturedRegion(x1, y1, x2, y2, s1, t1, s2, t2, color.r(),color.g(),color.b(),color.a());
+        drawTexturedRegion(x1, y1, x2, y2, s1, t1, s2, t2, color.r(), color.g(), color.b(), color.a());
     }
 
-    public void drawText(Font font, String text, float x, float y) {
-        final int textHeight = font.getHeight(text);
+    public void drawText(Font font, String text, float x, float y, Color color) {
+        final float scale = stbtt_ScaleForPixelHeight(font.getInfo(), font.getSize());
 
-        float drawX = x;
-        float drawY = y;
-        if (textHeight > font.getFontHeight()) {
-            drawY += textHeight - font.getFontHeight();
-        }
+        glActiveTexture(GL_TEXTURE0);
+        textShader.use();
+        font.getTexture().bind();
 
-        font.getBitmap().bind();
-        begin();
-        for (int i = 0; i < text.length(); i++) {
-            final char c = text.charAt(i);
-            if (c == '\n') {
-                drawY -= font.getFontHeight();
-                drawX = x;
-                continue;
+        try (final MemoryStack stack = MemoryStack.stackPush()) {
+            final IntBuffer pCodePoint = stack.mallocInt(1);
+            final FloatBuffer pX = stack.floats(0.0f);
+            final FloatBuffer pY = stack.floats(0.0f);
+
+            final STBTTAlignedQuad alignedQuad = STBTTAlignedQuad.malloc(stack);
+
+            final float factorX = 1.0f / application.getContentScaleX();
+            final float factorY = 1.0f / application.getContentScaleY();
+
+            float lineY = 0f;
+
+            for (int i = 0, to = text.length(); i < to; ) {
+                i += Font.getCodePoint(text, to, i, pCodePoint);
+
+                final int codePoint = pCodePoint.get(0);
+                if (codePoint == '\n') {
+                    pY.put(0, lineY = pY.get(0) + (font.getAscent() - font.getDescent() + font.getLineGap()) * scale);
+                    pX.put(0, 0.0f);
+                    continue;
+                } else if (codePoint < 32 || 128 <= codePoint) {
+                    continue;
+                }
+
+                float codePointX = pX.get(0);
+                stbtt_GetBakedQuad(font.getCharData(), font.getBitmapWidth(), font.getBitmapHeight(), codePoint - 32, pX, pY, alignedQuad, true);
+                pX.put(0, scale(codePointX, pX.get(0), factorX));
+                if (Font.KERNING && i < to) {
+                    Font.getCodePoint(text, to, i, pCodePoint);
+                    pX.put(0, pX.get(0) + stbtt_GetCodepointKernAdvance(font.getInfo(), codePoint, pCodePoint.get(0)) * scale);
+                }
+
+                final float x0 = scale(codePointX, alignedQuad.x0(), factorX);
+                final float x1 = scale(codePointX, alignedQuad.x1(), factorX);
+                final float y0 = scale(lineY, alignedQuad.y0(), factorY);
+                final float y1 = scale(lineY, alignedQuad.y1(), factorY);
+
+                vertexBuffer.add(x0, y0, color, alignedQuad.s0(), alignedQuad.t0());
+                vertexBuffer.add(x1, y0, color, alignedQuad.s1(), alignedQuad.t0());
+                vertexBuffer.add(x1, y1, color, alignedQuad.s1(), alignedQuad.t1());
+                vertexBuffer.add(x0, y1, color, alignedQuad.s0(), alignedQuad.t1());
             }
-            if (c == '\r') {
-                continue;
-            }
-            final Glyph glyph = font.getGlyph(c);
-            drawTexture(font.getBitmap(), drawX, drawY, glyph.getX(), glyph.getY(), glyph.getWidth(), glyph.getHeight(), Color.WHITE);
-            drawX += glyph.getWidth();
         }
-        end();
     }
+
+    private static float scale(float center, float offset, float factor) {
+        return (offset - center) * factor + center;
+    }
+
 
     public Vector2f convertMouseToWorld(float mouseX, float mouseY) {
         return projectionMatrix

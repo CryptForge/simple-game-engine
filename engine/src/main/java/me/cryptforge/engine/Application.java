@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +27,7 @@ public abstract class Application {
 
     private final long windowId;
     private final int worldWidth, worldHeight;
+    private final float contentScaleX, contentScaleY;
     private int width, height;
     private final Map<Integer, Integer> keyboardMap;
     private final Map<Integer, Integer> mouseMap;
@@ -72,6 +74,16 @@ public abstract class Application {
 
         if (windowId == NULL)
             throw new RuntimeException("Failed to create GLFW window");
+
+        try (MemoryStack s = stackPush()) {
+            FloatBuffer px = s.mallocFloat(1);
+            FloatBuffer py = s.mallocFloat(1);
+
+            glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), px, py);
+
+            contentScaleX = px.get(0);
+            contentScaleY = py.get(0);
+        }
     }
 
     /**
@@ -327,6 +339,14 @@ public abstract class Application {
      */
     public int getWorldHeight() {
         return worldHeight;
+    }
+
+    public float getContentScaleX() {
+        return contentScaleX;
+    }
+
+    public float getContentScaleY() {
+        return contentScaleY;
     }
 
     /**

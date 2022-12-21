@@ -1,6 +1,7 @@
 package me.cryptforge.game;
 
 import me.cryptforge.engine.Application;
+import me.cryptforge.engine.render.Color;
 import me.cryptforge.engine.render.Renderer;
 import me.cryptforge.engine.asset.*;
 import me.cryptforge.engine.input.InputAction;
@@ -157,7 +158,9 @@ public class Main extends Application {
 //                .position(0, 50)
 //                .size(50, 10)
 //                .draw();
-        renderer.drawText(font,"hello world",20, 20);
+        renderer.begin();
+        renderer.drawText(font,"hello world",20, 20, Color.RED);
+        renderer.end();
 
     }
 

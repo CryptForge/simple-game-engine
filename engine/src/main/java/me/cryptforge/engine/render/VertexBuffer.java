@@ -57,6 +57,12 @@ public final class VertexBuffer implements AutoCloseable {
         return this;
     }
 
+    public VertexBuffer add(float x, float y, Color color, float textureX, float textureY) {
+        buffer.put(x).put(y).put(color.r()).put(color.g()).put(color.b()).put(color.a()).put(textureX).put(textureY);
+        count++;
+        return this;
+    }
+
     @Override
     public void close() {
         MemoryUtil.memFree(buffer);

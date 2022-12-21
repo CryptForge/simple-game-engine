@@ -1,18 +1,17 @@
 package me.cryptforge.engine.asset;
 
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.system.MemoryUtil;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.ByteBuffer;
 
 public enum AssetPathType {
     RESOURCE("Resource") {
         @Override
         public @NotNull InputStream openStream(String path) throws FileNotFoundException {
             final InputStream inputStream = AssetPathType.class.getClassLoader().getResourceAsStream(path);
-            if(inputStream == null) {
+            if (inputStream == null) {
                 throw new FileNotFoundException();
             }
 
@@ -23,7 +22,7 @@ public enum AssetPathType {
         @Override
         public @NotNull InputStream openStream(String path) throws FileNotFoundException {
             final File file = new File(path);
-            if(!file.exists() || !file.isFile()) {
+            if (!file.exists() || !file.isFile()) {
                 throw new FileNotFoundException();
             }
 
@@ -43,4 +42,19 @@ public enum AssetPathType {
     }
 
     public abstract @NotNull InputStream openStream(String path) throws FileNotFoundException;
+
+    public ByteBuffer readToByteBuffer(String path, int bufferLimit) throws FileNotFoundException {
+        final ByteBuffer buffer = MemoryUtil.memAlloc(bufferLimit);
+        try (final InputStream stream = openStream(path)) {
+            byte b;
+            while (-1 != (b = (byte) stream.read())) {
+                buffer.put(b);
+            }
+        } catch (FileNotFoundException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return buffer;
+    }
 }
