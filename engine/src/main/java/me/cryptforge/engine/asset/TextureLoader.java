@@ -18,7 +18,7 @@ import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL30.glGenerateMipmap;
 import static org.lwjgl.stb.STBImage.*;
 
-final class TextureLoader extends AssetLoader<Texture,TextureSettings> {
+final class TextureLoader extends AssetLoader<Texture, TextureSettings> {
 
     private final Map<String, Texture> textures = new HashMap<>();
 
@@ -31,6 +31,9 @@ final class TextureLoader extends AssetLoader<Texture,TextureSettings> {
     protected @NotNull Texture load(String id, AssetPathType pathType, String path, TextureSettings settings) throws FileNotFoundException {
         final int textureId = glGenTextures();
 
+        final int desiredChannels = settings.hasAlpha() ? 4 : 3;
+        final int internalFormat = settings.hasAlpha() ? GL_RGBA : GL_RGB;
+
         final int width;
         final int height;
         final int channelCount;
@@ -40,29 +43,21 @@ final class TextureLoader extends AssetLoader<Texture,TextureSettings> {
             final IntBuffer bHeight = stack.mallocInt(1);
             final IntBuffer bChannelCount = stack.mallocInt(1);
 
-            if (pathType == AssetPathType.RESOURCE) {
-                try (final InputStream stream = pathType.openStream(path)) {
-                    final byte[] bytes = stream.readAllBytes();
+            try (final InputStream stream = pathType.openStream(path)) {
+                final byte[] bytes = stream.readAllBytes();
 
-                    final ByteBuffer rawData = MemoryUtil.memAlloc(bytes.length).put(bytes);
-                    rawData.flip();
-                    data = stbi_load_from_memory(rawData, bWidth, bHeight, bChannelCount, 3);
-                    MemoryUtil.memFree(rawData);
-                } catch (FileNotFoundException e) {
-                    throw e;
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                final ByteBuffer rawData = MemoryUtil.memAlloc(bytes.length).put(bytes);
+                rawData.flip();
+                data = stbi_load_from_memory(rawData, bWidth, bHeight, bChannelCount, desiredChannels);
+                MemoryUtil.memFree(rawData);
+            } catch (FileNotFoundException e) {
+                throw e;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
-                if(data == null) {
-                    throw new RuntimeException("Something has gone wrong while loading a texture from memory");
-                }
-            } else {
-                data = stbi_load(path, bWidth, bHeight, bChannelCount, 3);
-
-                if(data == null) { // File doesn't exist
-                    throw new FileNotFoundException();
-                }
+            if (data == null) {
+                throw new RuntimeException("Something has gone wrong while loading a texture from memory");
             }
 
             width = bWidth.get(0);
@@ -77,7 +72,7 @@ final class TextureLoader extends AssetLoader<Texture,TextureSettings> {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, settings.downFilter().getGlCode());
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings.upFilter().getGlCode());
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, internalFormat, GL_UNSIGNED_BYTE, data);
         if (settings.generateMipmap()) {
             glGenerateMipmap(GL_TEXTURE_2D);
         }
@@ -86,8 +81,27 @@ final class TextureLoader extends AssetLoader<Texture,TextureSettings> {
 
         final Texture texture = new Texture(textureId, width, height, channelCount);
 
-        textures.put(id,texture);
+        textures.put(id, texture);
 
         return texture;
+    }
+
+    protected static Texture loadTexture(ByteBuffer buffer, int width, int height, boolean alpha) {
+        final int textureId = glGenTextures();
+
+        final int channels = alpha ? 4 : 3;
+        final int internalFormat = alpha ? GL_RGBA : GL_RGB;
+
+        glBindTexture(GL_TEXTURE_2D, textureId);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, internalFormat, GL_UNSIGNED_BYTE, buffer);
+
+        return new Texture(textureId, width, height, channels);
+
     }
 }

@@ -1,6 +1,6 @@
 package me.cryptforge.game;
 
-import me.cryptforge.engine.Renderer;
+import me.cryptforge.engine.render.Renderer;
 import me.cryptforge.engine.asset.Texture;
 
 public class Button {

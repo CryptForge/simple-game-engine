@@ -3,6 +3,7 @@ package me.cryptforge.engine;
 import me.cryptforge.engine.input.InputAction;
 import me.cryptforge.engine.input.KeyboardKey;
 import me.cryptforge.engine.input.MouseButton;
+import me.cryptforge.engine.render.Renderer;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector2f;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -141,6 +142,7 @@ public abstract class Application {
 
         // Start loop
         while (!glfwWindowShouldClose(windowId)) {
+            glfwPollEvents();
             double deltaTime = glfwGetTime() - oldTime;
             oldTime = glfwGetTime();
 
@@ -156,8 +158,12 @@ public abstract class Application {
 
             render(renderer);
 
-            glfwPollEvents();
             glfwSwapBuffers(windowId);
+//            try {
+//                Thread.sleep((long) ((long) ((1.0 / 60.0) * 1000) - deltaTime));
+//            } catch (InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
         }
 
         glfwFreeCallbacks(windowId);

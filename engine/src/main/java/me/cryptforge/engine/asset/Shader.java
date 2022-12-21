@@ -55,5 +55,16 @@ public class Shader {
         }
     }
 
+    public void initAttribute(String location, int size, int stride, int offset) {
+        final int attribLocation = glGetAttribLocation(id,location);
+        glVertexAttribPointer(attribLocation,size,GL_FLOAT,false,stride,offset);
+        glEnableVertexAttribArray(attribLocation);
+    }
+
+    public void initAttribute(int index, int size, int stride, int offset) {
+        glVertexAttribPointer(index,size,GL_FLOAT,false,stride,offset);
+        glEnableVertexAttribArray(index);
+    }
+
 
 }

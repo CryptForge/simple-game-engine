@@ -9,8 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.lwjgl.opengl.GL11.GL_TRUE;
-import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL33.*;
 
 final class ShaderLoader extends AssetLoader<Shader, Void> {
 
@@ -48,6 +47,7 @@ final class ShaderLoader extends AssetLoader<Shader, Void> {
         final int shaderId = glCreateProgram();
         glAttachShader(shaderId, vertexId);
         glAttachShader(shaderId, fragmentId);
+        glBindFragDataLocation(shaderId,0,"fragColor");
         glLinkProgram(shaderId);
 
         final int[] buffer = new int[1];
@@ -81,7 +81,7 @@ final class ShaderLoader extends AssetLoader<Shader, Void> {
         final boolean success = buffer[0] == GL_TRUE;
 
         if (!success) {
-            return glGetProgramInfoLog(id);
+            return glGetShaderInfoLog(id);
         }
         return "";
     }

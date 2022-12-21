@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("maven-publish")
 }
 
 group = "me.cryptforge"
@@ -33,4 +34,16 @@ dependencies {
     runtimeOnly("org.lwjgl", "lwjgl-openal", classifier = lwjglNatives)
     runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = lwjglNatives)
     runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = lwjglNatives)
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "me.cryptforge"
+            artifactId = "simple-game-engine"
+            version = this.version
+
+            from(components["java"])
+        }
+    }
 }

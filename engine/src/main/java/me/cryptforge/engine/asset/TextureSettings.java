@@ -2,19 +2,26 @@ package me.cryptforge.engine.asset;
 
 public record TextureSettings(
         boolean generateMipmap,
+        boolean hasAlpha,
         TextureFilter downFilter,
         TextureFilter upFilter
 ) {
 
     public static final class Builder {
-        private boolean generateMipmap = false;
+        private boolean mipmap = false;
+        private boolean alpha = false;
         private TextureFilter downFilter = TextureFilter.LINEAR;
         private TextureFilter upFilter = TextureFilter.LINEAR;
 
         private Builder() {}
 
         public Builder generateMipmap(boolean generateMipmap) {
-            this.generateMipmap = generateMipmap;
+            this.mipmap = generateMipmap;
+            return this;
+        }
+
+        public Builder hasAlpha(boolean hasAlpha) {
+            this.alpha = hasAlpha;
             return this;
         }
 
@@ -29,12 +36,17 @@ public record TextureSettings(
         }
 
         public TextureSettings build() {
-            return new TextureSettings(generateMipmap,downFilter,upFilter);
+            return new TextureSettings(mipmap,alpha,downFilter,upFilter);
         }
     }
 
     public static Builder builder() {
         return new Builder();
     }
+
+    public static TextureSettings defaultSettings() {
+        return TextureSettings.builder().build();
+    }
+
 
 }

@@ -1,7 +1,7 @@
 package me.cryptforge.game;
 
 import me.cryptforge.engine.Application;
-import me.cryptforge.engine.Renderer;
+import me.cryptforge.engine.render.Renderer;
 import me.cryptforge.engine.asset.*;
 import me.cryptforge.engine.input.InputAction;
 import me.cryptforge.engine.input.KeyboardKey;
@@ -16,8 +16,10 @@ public class Main extends Application {
     private Texture texture;
     private Texture buttonTexture;
     private Texture buttonPressedTexture;
+    private Font font;
     private Button button;
     double time = 0;
+    double timeSpeed = 0.05;
 
 
     public Main() {
@@ -44,6 +46,7 @@ public class Main extends Application {
                                                               .build();
         buttonTexture = AssetManager.loadTexture("button", AssetPathType.FILE, "assets/textures/button.png", buttonSettings);
         buttonPressedTexture = AssetManager.loadTexture("button_pressed", AssetPathType.FILE, "assets/textures/button_pressed.png", buttonSettings);
+        font = AssetManager.loadFont("font", AssetPathType.FILE, "assets/fonts/NotoSans-Regular.ttf", 24);
         button = new Button(
                 buttonTexture,
                 200, 40,
@@ -56,7 +59,7 @@ public class Main extends Application {
 
     @Override
     public void update() {
-        time += 0.05;
+        time += timeSpeed;
 
         final Vector2f movement = new Vector2f(0, 0);
         if (isKeyPressed(KeyboardKey.A)) {
@@ -91,8 +94,18 @@ public class Main extends Application {
 
     @Override
     public void onKey(KeyboardKey key, InputAction action) {
-        if (key == KeyboardKey.ESC && action == InputAction.PRESSED) {
+        if (action != InputAction.PRESSED)
+            return;
+
+        if (key == KeyboardKey.ESC) {
             exit();
+        }
+
+        if (key == KeyboardKey.UP) {
+            timeSpeed += 0.01;
+        }
+        if (key == KeyboardKey.DOWN) {
+            timeSpeed -= 0.01;
         }
     }
 
@@ -113,31 +126,39 @@ public class Main extends Application {
     public void render(Renderer renderer) {
         renderer.clear(0, 0, 120, 1f);
 
-        final Vector2f mousePos = getMousePosition();
-        if (button.isInBounds((int) mousePos.x, (int) mousePos.y)) {
-            button.setTexture(buttonPressedTexture);
-        } else {
-            button.setTexture(buttonTexture);
-        }
+//        final Vector2f mousePos = getMousePosition();
+//        if (button.isInBounds((int) mousePos.x, (int) mousePos.y)) {
+//            button.setTexture(buttonPressedTexture);
+//        } else {
+//            button.setTexture(buttonTexture);
+//        }
+//
+//        final int size = 75;
+//        for (int i = 0; i < 12; i++) {
+//            int x = i * size;
+//            for (int j = 0; j < 8; j++) {
+//                int y = j * size;
+//                renderer.sprite(texture)
+//                        .position(x, y)
+//                        .size(size, size)
+//                        .color(Math.sin(time + x + y) * 0.75f, -Math.sin(time + x + y) * 0.75f, 0)
+//                        .draw();
+//            }
+//        }
+//
+//        renderer.sprite(texture)
+//                .position(position.x, position.y)
+//                .size(sizeX, sizeY)
+//                .draw();
+//
+//        button.draw(renderer);
+//
+//        renderer.sprite(font.getBitmap())
+//                .position(0, 50)
+//                .size(50, 10)
+//                .draw();
+        renderer.drawText(font,"hello world",20, 20);
 
-        for (int i = 0; i < 11; i++) {
-            int x = i * 75;
-            for (int j = 0; j < 8; j++) {
-                int y = j * 75;
-                renderer.sprite(texture)
-                        .position(x, y)
-                        .size(75, 75)
-                        .color(Math.sin(time + x + y) * 0.75f, -Math.sin(time + x + y) * 0.75f, 0)
-                        .draw();
-            }
-        }
-
-        renderer.sprite(texture)
-                .position(position.x, position.y)
-                .size(sizeX, sizeY)
-                .draw();
-
-        button.draw(renderer);
     }
 
     public static void main(String[] args) {

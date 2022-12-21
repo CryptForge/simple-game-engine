@@ -1,4 +1,4 @@
-package me.cryptforge.engine;
+package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.asset.Texture;
 
