@@ -2,6 +2,7 @@ package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.Application;
 import me.cryptforge.engine.asset.*;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
@@ -9,17 +10,16 @@ import org.lwjgl.stb.STBTTAlignedQuad;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL33.*;
-import static org.lwjgl.stb.STBTruetype.*;
+import static org.lwjgl.stb.STBTruetype.stbtt_GetBakedQuad;
+import static org.lwjgl.stb.STBTruetype.stbtt_ScaleForPixelHeight;
 
 public class Renderer {
 
     private final Application application;
 
     private final Matrix3x2f projectionMatrix;
-    private final Matrix4f modelMatrix;
     private final SpriteBuilder cachedBuilder;
 
     private final Shader spriteShader;
@@ -28,6 +28,9 @@ public class Renderer {
     private final VertexBufferObject vbo;
 
     private final VertexBuffer vertexBuffer;
+
+    private RenderType renderType;
+    private Texture activeTexture;
 
     private boolean isDrawing;
 
@@ -39,7 +42,6 @@ public class Renderer {
 
 
         cachedBuilder = new SpriteBuilder(this);
-        modelMatrix = new Matrix4f();
         projectionMatrix = new Matrix3x2f()
                 .view(0f, application.getWidth(), application.getHeight(), 0f);
 
@@ -68,10 +70,11 @@ public class Renderer {
         initVertexAttributes();
     }
 
-    public void begin() {
+    public void begin(RenderType renderType) {
         if (isDrawing) {
             throw new RuntimeException("start during draw");
         }
+        this.renderType = renderType;
         isDrawing = true;
         vertexBuffer.clear();
     }
@@ -81,7 +84,11 @@ public class Renderer {
             throw new RuntimeException("end without drawing");
         }
         isDrawing = false;
-        vertexBuffer.flush(textShader);
+
+        vertexBuffer.flush();
+
+        renderType = null;
+        activeTexture = null;
     }
 
     /**
@@ -111,95 +118,16 @@ public class Renderer {
         return cachedBuilder.reset().texture(texture);
     }
 
-    public void drawSprite(Texture texture, float posX, float posY, float sizeX, float sizeY, float rotation, float r, float g, float b) {
-        spriteShader.use();
+    public void drawSprite(Texture texture, float posX, float posY, float sizeX, float sizeY, float r, float g, float b, float a) {
+        setActiveTexture(texture);
 
-        modelMatrix.identity()
-                   .translate(posX, posY, 0)
-                   .translate(0.5f * sizeX, 0.5f * sizeY, 0f)
-                   .rotate((float) Math.toRadians(rotation), 0, 0, 1)
-                   .translate(-0.5f * sizeX, -0.5f * sizeY, 0f)
-                   .scale(sizeX, sizeY, 0);
-
-        spriteShader.setMatrix4f("model", modelMatrix);
-
-        glActiveTexture(GL_TEXTURE0);
-        texture.bind();
-
-        //        final float[] quadVertices = {
-//                0.0f, 1.0f, 0.0f, 1.0f,
-//                1.0f, 0.0f, 1.0f, 0.0f,
-//                0.0f, 0.0f, 0.0f, 0.0f,
-//
-//                0.0f, 1.0f, 0.0f, 1.0f,
-//                1.0f, 1.0f, 1.0f, 1.0f,
-//                1.0f, 0.0f, 1.0f, 0.0f
-//        };
-
-        vao.bind();
-        begin();
-//        vertexBuffer.add(0,1,1,1,1,1,0,1);
-//        vertexBuffer.add(1,0,1,1,1,1,1,0);
-//        vertexBuffer.add(0,0,1,1,1,1,0,0);
-//
-//        vertexBuffer.add(0,1,1,1,1,1,0,1);
-//        vertexBuffer.add(1,1,1,1,1,1,1,1);
-//        vertexBuffer.add(1,0,1,1,1,1,1,0);
-        drawTexture(texture, posX, posY, Color.WHITE);
-        end();
-    }
-
-    private void drawTexturedRegion(float bottomX, float bottomY, float topX, float topY, float bottomTextureX, float bottomTextureY, float topTextureX, float topTextureY, float r, float g, float b, float a) {
-        vertexBuffer.add(bottomX, bottomY, r, g, b, a, bottomTextureX, bottomTextureY);
-        vertexBuffer.add(bottomX, topY, r, g, b, a, bottomTextureX, topTextureY);
-        vertexBuffer.add(topX, topY, r, g, b, a, topTextureX, topTextureY);
-
-        vertexBuffer.add(bottomX, bottomY, r, g, b, a, bottomTextureX, bottomTextureY);
-        vertexBuffer.add(topX, topY, r, g, b, a, topTextureX, topTextureY);
-        vertexBuffer.add(topX, bottomY, r, g, b, a, topTextureX, bottomTextureY);
-    }
-
-    private void drawTexture(Texture texture, float x, float y, float regX, float regY, float regWidth, float regHeight, Color color) {
-        float x2 = x + regWidth;
-        float y2 = y + regHeight;
-
-        float s1 = regX / texture.getWidth();
-        float t1 = regY / texture.getHeight();
-        float s2 = (regX + regWidth) / texture.getWidth();
-        float t2 = (regY + regHeight) / texture.getHeight();
-
-        drawTexturedRegion(x, y, x2, y2, s1, t1, s2, t2, color.r(), color.g(), color.b(), color.a());
-    }
-
-    public void drawTexture(Texture texture, float x, float y, Color color) {
-        /* Vertex positions */
-        float x1 = x;
-        float y1 = y;
-        float x2 = x1 + texture.getWidth();
-        float y2 = y1 + texture.getHeight();
-
-        /* Texture coordinates */
-        float s1 = 0f;
-        float t1 = 0f;
-        float s2 = 1f;
-        float t2 = 1f;
-
-        drawTexturedRegion(x1, y1, x2, y2, s1, t1, s2, t2, color.r(), color.g(), color.b(), color.a());
+        vertexBuffer.region(posX, posY, posX + sizeX, posY + sizeY, 0, 0, 1, 1, r, g, b, a);
     }
 
     public void drawText(Font font, String text, float x, float y, Color color) {
         final float scale = stbtt_ScaleForPixelHeight(font.getInfo(), font.getSize());
 
-        final float factorX = 1.0f / application.getContentScaleX();
-        final float factorY = 1.0f / application.getContentScaleY();
-
-        glActiveTexture(GL_TEXTURE0);
-        font.getTexture().bind();
-
-//        modelMatrix.identity()
-//                   .translate(x, y, 0);
-//
-//        spriteShader.setMatrix4f("model", modelMatrix);
+        setActiveTexture(font.getTexture());
 
         try (final MemoryStack stack = MemoryStack.stackPush()) {
             final FloatBuffer pX = stack.floats(0.0f);
@@ -207,9 +135,18 @@ public class Renderer {
 
             final STBTTAlignedQuad alignedQuad = STBTTAlignedQuad.malloc(stack);
 
+            pX.put(0, x);
+            pY.put(0, y);
+
             for (int i = 0; i < text.length(); i++) {
+                final char c = text.charAt(i);
                 final int codePoint = Character.codePointAt(text, i);
-                final Glyph glyph = font.getGlyph(codePoint);
+
+                if (c == '\n') {
+                    pX.put(0, x);
+                    pY.put(0, pY.get(0) + (font.getAscent() - font.getDescent() + font.getLineGap()) * scale);
+                    continue;
+                }
 
                 stbtt_GetBakedQuad(
                         font.getCharData(),
@@ -222,36 +159,15 @@ public class Renderer {
                         true
                 );
 
-                final float xPos = x + glyph.leftBearing() * scale;
-                final float yPos = y - (font.getSize() - glyph.leftBearing()) * scale;
-                final float width = font.getSize() * scale;
-                final float height = font.getSize() * scale;
-
-
-                final float offset = pX.get(0);
-
                 final float x0 = alignedQuad.x0();
                 final float x1 = alignedQuad.x1();
                 final float y0 = alignedQuad.y0();
                 final float y1 = alignedQuad.y1();
 
-                drawTexturedRegion(0 + offset,0,font.getSize() + offset,font.getSize(),alignedQuad.s0(),alignedQuad.t0(),alignedQuad.s1(),alignedQuad.t1(),color.r(),color.g(),color.b(),color.a());
-
-//                vertexBuffer.add(0, 0, color, alignedQuad.s0(), alignedQuad.t0());
-//                vertexBuffer.add(32, 0, color, alignedQuad.s1(), alignedQuad.t0());
-//                vertexBuffer.add(32, 32, color, alignedQuad.s1(), alignedQuad.t1());
-//
-//                vertexBuffer.add(0, 32, color, alignedQuad.s0(), alignedQuad.t1());
-//                vertexBuffer.add(32, 32, color, alignedQuad.s0(), alignedQuad.t1());
-//                vertexBuffer.add(32, 0, color, alignedQuad.s0(), alignedQuad.t1());
+                vertexBuffer.region(x0, y0, x1, y1, alignedQuad.s0(), alignedQuad.t0(), alignedQuad.s1(), alignedQuad.t1(), color);
             }
         }
     }
-
-    private static float scale(float center, float offset, float factor) {
-        return (offset - center) * factor + center;
-    }
-
 
     public Vector2f convertMouseToWorld(float mouseX, float mouseY) {
         return projectionMatrix
@@ -263,7 +179,7 @@ public class Renderer {
                 );
     }
 
-    public void initVertexAttributes() {
+    private void initVertexAttributes() {
         // x, y, r, g, b, a, textureX, textureY
 
         // position
@@ -272,6 +188,21 @@ public class Renderer {
         spriteShader.initAttribute(1, 4, 8 * Float.BYTES, 2 * Float.BYTES);
         // texture coordinates
         spriteShader.initAttribute(2, 2, 8 * Float.BYTES, 6 * Float.BYTES);
+    }
+
+    private void setActiveTexture(@NotNull Texture texture) {
+        if (activeTexture != null && !activeTexture.equals(texture)) {
+            throw new RuntimeException("Attempted to change texture twice during draw session");
+        }
+        activeTexture = texture;
+    }
+
+    public Shader getActiveShader() {
+        return renderType == RenderType.SPRITE ? spriteShader : textShader;
+    }
+
+    public Texture getActiveTexture() {
+        return activeTexture;
     }
 
 

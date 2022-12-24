@@ -1,7 +1,5 @@
 package me.cryptforge.engine.render;
 
-import org.lwjgl.system.MemoryUtil;
-
 import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL33.*;

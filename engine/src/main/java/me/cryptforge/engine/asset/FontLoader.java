@@ -7,25 +7,16 @@ import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
-import java.awt.image.renderable.RenderedImageFactory;
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.channels.ByteChannel;
-import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.OpenOption;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL33.GL_ALPHA;
+import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
 import static org.lwjgl.stb.STBTruetype.*;
 
 public class FontLoader extends AssetLoader<Font, Integer> {
@@ -39,19 +30,21 @@ public class FontLoader extends AssetLoader<Font, Integer> {
 
     @Override
     protected @NotNull Font load(String id, AssetPathType pathType, String path, Integer fontSize) throws FileNotFoundException {
-        final ByteBuffer ttf;
+        final ByteBuffer data;
 
         try (final InputStream stream = pathType.openStream(path)) {
             final byte[] bytes = stream.readAllBytes();
-            ttf = MemoryUtil.memAlloc(bytes.length).put(bytes);
-            ttf.flip();
+            data = MemoryUtil.memAlloc(bytes.length).put(bytes);
+            data.flip();
+        } catch (FileNotFoundException e) {
+            throw e;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
         final STBTTFontinfo info = STBTTFontinfo.create();
 
-        if (!stbtt_InitFont(info, ttf)) {
+        if (!stbtt_InitFont(info, data)) {
             throw new IllegalStateException("Failed to init font");
         }
         final int ascent, descent, lineGap;
@@ -73,12 +66,29 @@ public class FontLoader extends AssetLoader<Font, Integer> {
 
         final STBTTBakedChar.Buffer charData = STBTTBakedChar.malloc(215);
         final ByteBuffer bitmap = MemoryUtil.memAlloc(bitmapWidth * bitmapHeight);
-        int result = stbtt_BakeFontBitmap(ttf, fontSize, bitmap, bitmapWidth, bitmapHeight, 32, charData);
+        stbtt_BakeFontBitmap(data, fontSize, bitmap, bitmapWidth, bitmapHeight, 32, charData);
 
-        final Texture texture = TextureLoader.loadTexture(bitmap, bitmapWidth, bitmapHeight, GL_RED);
+        final Texture texture = createBitmapTexture(bitmap, bitmapWidth, bitmapHeight);
 
         MemoryUtil.memFree(bitmap);
 
-        return new Font(info, charData, texture, fontSize, ascent, descent, lineGap, bitmapWidth, bitmapHeight);
+        return new Font(info, charData, texture,data, fontSize, ascent, descent, lineGap, bitmapWidth, bitmapHeight);
+    }
+
+    private static Texture createBitmapTexture(ByteBuffer buffer, int width, int height) {
+        final int textureId = glGenTextures();
+
+        glBindTexture(GL_TEXTURE_2D, textureId);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, buffer);
+
+        glBindTexture(GL_TEXTURE_2D,0);
+
+        return new Texture(textureId, width, height, 1);
     }
 }

@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     implementation("org.joml:joml:1.10.5")
-    compileOnly("org.jetbrains:annotations:23.0.0")
+    compileOnly("org.jetbrains:annotations:23.1.0")
 
     // LWJGL
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))

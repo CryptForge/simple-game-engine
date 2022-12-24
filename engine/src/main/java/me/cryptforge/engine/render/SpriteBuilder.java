@@ -12,8 +12,7 @@ public class SpriteBuilder {
 
     private float posX, posY;
     private float sizeX = 10f, sizeY = 10f;
-    private float r = 1f, g = 1f, b = 1f;
-    private float rotation;
+    private float r = 1f, g = 1f, b = 1f, a = 1f;
 
     protected SpriteBuilder(Renderer renderer) {
         this.renderer = renderer;
@@ -36,11 +35,6 @@ public class SpriteBuilder {
         return this;
     }
 
-    public SpriteBuilder rotation(float rotation) {
-        this.rotation = rotation;
-        return this;
-    }
-
     public SpriteBuilder color(float r, float g, float b) {
         this.r = r;
         this.g = g;
@@ -55,13 +49,20 @@ public class SpriteBuilder {
         return this;
     }
 
+    public SpriteBuilder color(Color color) {
+        this.r = color.r();
+        this.g = color.g();
+        this.b = color.b();
+        this.a = color.a();
+        return this;
+    }
+
     public SpriteBuilder reset() {
         texture = null;
         posX = 0f;
         posY = 0f;
         sizeX = 10f;
         sizeY = 10f;
-        rotation = 0f;
         r = 1f;
         g = 1f;
         b = 1f;
@@ -77,8 +78,7 @@ public class SpriteBuilder {
                 texture,
                 posX, posY,
                 sizeX, sizeY,
-                rotation,
-                r, g, b
+                r, g, b, a
         );
     }
 

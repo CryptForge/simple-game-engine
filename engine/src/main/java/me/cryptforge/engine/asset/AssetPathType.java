@@ -1,10 +1,11 @@
 package me.cryptforge.engine.asset;
 
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.system.MemoryUtil;
 
-import java.io.*;
-import java.nio.ByteBuffer;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 public enum AssetPathType {
     RESOURCE("Resource") {
@@ -42,19 +43,4 @@ public enum AssetPathType {
     }
 
     public abstract @NotNull InputStream openStream(String path) throws FileNotFoundException;
-
-    public ByteBuffer readToByteBuffer(String path, int bufferLimit) throws FileNotFoundException {
-        final ByteBuffer buffer = MemoryUtil.memAlloc(bufferLimit);
-        try (final InputStream stream = openStream(path)) {
-            byte b;
-            while (-1 != (b = (byte) stream.read())) {
-                buffer.put(b);
-            }
-        } catch (FileNotFoundException e) {
-            throw e;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return buffer;
-    }
 }

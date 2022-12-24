@@ -1,5 +1,6 @@
 package me.cryptforge.game;
 
+import me.cryptforge.engine.render.RenderType;
 import me.cryptforge.engine.render.Renderer;
 import me.cryptforge.engine.asset.Texture;
 
@@ -7,8 +8,8 @@ public class Button {
 
     private Texture texture;
     private final int width,height;
+    private final Runnable callback;
     private int x,y;
-    private Runnable callback;
 
     public Button(Texture texture, int width, int height, int x, int y, Runnable callback) {
         this.texture = texture;
@@ -20,10 +21,12 @@ public class Button {
     }
 
     public void draw(Renderer renderer) {
+        renderer.begin(RenderType.SPRITE);
         renderer.sprite(texture)
                 .position(x,y)
                 .size(width,height)
                 .draw();
+        renderer.end();
     }
 
     public boolean isInBounds(int x, int y) {

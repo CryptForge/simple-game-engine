@@ -9,7 +9,6 @@ uniform sampler2D image;
 
 void main() {
     vec4 texColor = vertexColor * texture(image,textureCoords);
-//    vec4 texColor = vertexColor;
     if(texColor.a < 0.1) {
         discard;
     }

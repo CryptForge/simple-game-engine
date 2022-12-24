@@ -1,12 +1,13 @@
 package me.cryptforge.game;
 
 import me.cryptforge.engine.Application;
-import me.cryptforge.engine.render.Color;
-import me.cryptforge.engine.render.Renderer;
 import me.cryptforge.engine.asset.*;
 import me.cryptforge.engine.input.InputAction;
 import me.cryptforge.engine.input.KeyboardKey;
 import me.cryptforge.engine.input.MouseButton;
+import me.cryptforge.engine.render.Color;
+import me.cryptforge.engine.render.RenderType;
+import me.cryptforge.engine.render.Renderer;
 import org.joml.Vector2f;
 
 public class Main extends Application {
@@ -47,7 +48,7 @@ public class Main extends Application {
                                                               .build();
         buttonTexture = AssetManager.loadTexture("button", AssetPathType.FILE, "assets/textures/button.png", buttonSettings);
         buttonPressedTexture = AssetManager.loadTexture("button_pressed", AssetPathType.FILE, "assets/textures/button_pressed.png", buttonSettings);
-        font = AssetManager.loadFont("font", AssetPathType.FILE, "assets/fonts/NotoSans-Regular.ttf", 24);
+        font = AssetManager.loadFont("font", AssetPathType.FILE, "assets/fonts/NotoSans-Regular.ttf", 48);
         button = new Button(
                 buttonTexture,
                 200, 40,
@@ -91,6 +92,7 @@ public class Main extends Application {
         }
 
         position.add(movement);
+
     }
 
     @Override
@@ -118,50 +120,47 @@ public class Main extends Application {
             this.button.getCallback().run();
             return;
         }
-        position.y = y - sizeY / 2;
-        position.x = x - sizeX / 2;
-
+        position.y = y;
+        position.x = x;
     }
 
     @Override
     public void render(Renderer renderer) {
         renderer.clear(0, 0, 120, 1f);
 
-//        final Vector2f mousePos = getMousePosition();
-//        if (button.isInBounds((int) mousePos.x, (int) mousePos.y)) {
-//            button.setTexture(buttonPressedTexture);
-//        } else {
-//            button.setTexture(buttonTexture);
-//        }
-//
-//        final int size = 75;
-//        for (int i = 0; i < 12; i++) {
-//            int x = i * size;
-//            for (int j = 0; j < 8; j++) {
-//                int y = j * size;
-//                renderer.sprite(texture)
-//                        .position(x, y)
-//                        .size(size, size)
-//                        .color(Math.sin(time + x + y) * 0.75f, -Math.sin(time + x + y) * 0.75f, 0)
-//                        .draw();
-//            }
-//        }
-//
-//        renderer.sprite(texture)
-//                .position(position.x, position.y)
-//                .size(sizeX, sizeY)
-//                .draw();
-//
-//        button.draw(renderer);
-//
-//        renderer.sprite(font.getBitmap())
-//                .position(0, 50)
-//                .size(50, 10)
-//                .draw();
-        renderer.begin();
-        renderer.drawText(font,"e",20, 20, Color.RED);
+        final Vector2f mousePos = getMousePosition();
+        if (button.isInBounds((int) mousePos.x, (int) mousePos.y)) {
+            button.setTexture(buttonPressedTexture);
+        } else {
+            button.setTexture(buttonTexture);
+        }
+
+        renderer.begin(RenderType.SPRITE);
+        final int size = 50;
+        for (int i = 0; i < 12; i++) {
+            int x = i * size;
+            for (int j = 0; j < 8; j++) {
+                int y = j * size;
+                renderer.sprite(texture)
+                        .position(x, y)
+                        .size(size, size)
+                        .color(Color.GREEN)
+                        .draw();
+            }
+        }
+
+        renderer.sprite(texture)
+                .position(position.x, position.y)
+                .size(sizeX, sizeY)
+                .draw();
+
         renderer.end();
 
+        button.draw(renderer);
+
+        renderer.begin(RenderType.TEXT);
+        renderer.drawText(font, "Hello World", 20, 250, Color.RED);
+        renderer.end();
     }
 
     public static void main(String[] args) {

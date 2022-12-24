@@ -2,12 +2,16 @@ package me.cryptforge.engine.render;
 
 public record Color(float r, float g, float b, float a) {
 
-    public static final Color WHITE = new Color(1, 1, 1, 1);
-    public static final Color BLACK = new Color(0, 0, 0, 1);
+    public Color(int r, int g, int b, float a) {
+        this(r / 255f, g / 255f, b / 255f, a);
+    }
 
-    public static final Color RED = new Color(1, 0, 0, 1);
-    public static final Color GREEN = new Color(0, 1, 0, 1);
-    public static final Color BLUE = new Color(0, 0, 1, 1);
+    public static final Color WHITE = new Color(1f, 1f, 1f, 1);
+    public static final Color BLACK = new Color(0f, 0f, 0f, 1);
+
+    public static final Color RED = new Color(1f, 0f, 0f, 1);
+    public static final Color GREEN = new Color(0f, 1f, 0f, 1);
+    public static final Color BLUE = new Color(0f, 0f, 1f, 1);
 
     public Color withAlpha(float alpha) {
         return new Color(r,g,b,alpha);

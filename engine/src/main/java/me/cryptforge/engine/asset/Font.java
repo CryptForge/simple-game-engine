@@ -3,6 +3,7 @@ package me.cryptforge.engine.asset;
 import org.lwjgl.stb.STBTTBakedChar;
 import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -13,11 +14,10 @@ import static org.lwjgl.stb.STBTruetype.*;
 
 public class Font {
 
-    public static final boolean KERNING = true;
-
     private final STBTTFontinfo info;
     private final STBTTBakedChar.Buffer charData;
     private final Texture texture;
+    private final ByteBuffer data;
     private final Map<Integer, Glyph> glyphs = new HashMap<>();
     private final int size;
     private final int ascent;
@@ -26,10 +26,11 @@ public class Font {
     private final int bitmapWidth;
     private final int bitmapHeight;
 
-    public Font(STBTTFontinfo info, STBTTBakedChar.Buffer charData, Texture texture, int size, int ascent, int descent, int lineGap, int bitmapWidth, int bitmapHeight) {
+    public Font(STBTTFontinfo info, STBTTBakedChar.Buffer charData, Texture texture, ByteBuffer data, int size, int ascent, int descent, int lineGap, int bitmapWidth, int bitmapHeight) {
         this.info = info;
         this.charData = charData;
         this.texture = texture;
+        this.data = data;
         this.size = size;
         this.ascent = ascent;
         this.descent = descent;
@@ -48,6 +49,24 @@ public class Font {
 
         }
     }
+
+    public float getWidth(String text) {
+        int width = 0;
+
+        for (int i = 0; i < text.length(); i++) {
+            final int codepoint = Character.codePointAt(text, i);
+            final Glyph glyph = getGlyph(codepoint);
+
+            width += glyph.advance();
+        }
+
+        return width * getScale();
+    }
+
+    public float getScale() {
+        return stbtt_ScaleForPixelHeight(info, size);
+    }
+
 
     public int getBitmapWidth() {
         return bitmapWidth;
@@ -89,74 +108,9 @@ public class Font {
         return glyphs.get(codepoint);
     }
 
-    public static int getCodePoint(String text, int to, int i, IntBuffer cpOut) {
-        char c1 = text.charAt(i);
-        if (Character.isHighSurrogate(c1) && i + 1 < to) {
-            char c2 = text.charAt(i + 1);
-            if (Character.isLowSurrogate(c2)) {
-                cpOut.put(0, Character.toCodePoint(c1, c2));
-                return 2;
-            }
-        }
-        cpOut.put(0, c1);
-        return 1;
+    public void free() {
+        MemoryUtil.memFree(data);
+        charData.free();
     }
 
-    public float getWidth(String text, int from, int to) {
-        int width = 0;
-
-        try (final MemoryStack stack = MemoryStack.stackPush()) {
-            final IntBuffer pCodePoint = stack.mallocInt(1);
-            final IntBuffer pAdvancedWidth = stack.mallocInt(1);
-            final IntBuffer pLeftSideBearing = stack.mallocInt(1);
-
-            int i = from;
-            while (i < to) {
-                i += getCodePoint(text, to, i, pCodePoint);
-                final int codePoint = pCodePoint.get(0);
-
-                stbtt_GetCodepointHMetrics(info, codePoint, pAdvancedWidth, pLeftSideBearing);
-                width += pAdvancedWidth.get(0);
-
-                if (Font.KERNING && i < to) {
-                    getCodePoint(text, to, i, pCodePoint);
-                    width += stbtt_GetCodepointKernAdvance(info, codePoint, pCodePoint.get(0));
-                }
-
-            }
-        }
-        return width * stbtt_ScaleForPixelHeight(info, size);
-    }
-//
-//    public int getHeight(String text) {
-//        int height = 0;
-//        int lineHeight = 0;
-//        for(int i = 0; i < text.length(); i++) {
-//            final char c = text.charAt(i);
-//            if (c == '\n') {
-//                height += lineHeight;
-//                lineHeight = 0;
-//                continue;
-//            }
-//            if (c == '\r') {
-//                continue;
-//            }
-//            final Glyph glyph = glyphs.get(c);
-//            lineHeight = Math.max(lineHeight,glyph.getHeight());
-//        }
-//        height += lineHeight;
-//        return height;
-//    }
-//
-//    public int getFontHeight() {
-//        return fontHeight;
-//    }
-//
-//    public Glyph getGlyph(char c) {
-//        return glyphs.get(c);
-//    }
-//
-//    public Texture getBitmap() {
-//        return bitmap;
-//    }
 }

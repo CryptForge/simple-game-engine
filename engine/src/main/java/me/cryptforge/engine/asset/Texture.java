@@ -1,5 +1,7 @@
 package me.cryptforge.engine.asset;
 
+import java.util.Objects;
+
 import static org.lwjgl.opengl.GL33.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL33.glBindTexture;
 
@@ -36,5 +38,18 @@ public class Texture {
 
     public int getChannelCount() {
         return channelCount;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Texture texture = (Texture) o;
+        return id == texture.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
