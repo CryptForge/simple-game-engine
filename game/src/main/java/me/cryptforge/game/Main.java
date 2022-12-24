@@ -159,7 +159,7 @@ public class Main extends Application {
 //                .size(50, 10)
 //                .draw();
         renderer.begin();
-        renderer.drawText(font,"hello world",20, 20, Color.RED);
+        renderer.drawText(font,"e",20, 20, Color.RED);
         renderer.end();
 
     }

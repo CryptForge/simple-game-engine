@@ -6,6 +6,8 @@ import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.lwjgl.stb.STBTruetype.*;
 
@@ -15,8 +17,8 @@ public class Font {
 
     private final STBTTFontinfo info;
     private final STBTTBakedChar.Buffer charData;
-    private final ByteBuffer ttf;
     private final Texture texture;
+    private final Map<Integer, Glyph> glyphs = new HashMap<>();
     private final int size;
     private final int ascent;
     private final int descent;
@@ -24,10 +26,9 @@ public class Font {
     private final int bitmapWidth;
     private final int bitmapHeight;
 
-    public Font(STBTTFontinfo info, STBTTBakedChar.Buffer charData, ByteBuffer ttf, Texture texture, int size, int ascent, int descent, int lineGap, int bitmapWidth, int bitmapHeight) {
+    public Font(STBTTFontinfo info, STBTTBakedChar.Buffer charData, Texture texture, int size, int ascent, int descent, int lineGap, int bitmapWidth, int bitmapHeight) {
         this.info = info;
         this.charData = charData;
-        this.ttf = ttf;
         this.texture = texture;
         this.size = size;
         this.ascent = ascent;
@@ -35,6 +36,17 @@ public class Font {
         this.lineGap = lineGap;
         this.bitmapWidth = bitmapWidth;
         this.bitmapHeight = bitmapHeight;
+
+        try (final MemoryStack stack = MemoryStack.stackPush()) {
+            final IntBuffer pAdvance = stack.mallocInt(1);
+            final IntBuffer pLeftBearing = stack.mallocInt(1);
+
+            for (int i = 0; i < 128; i++) {
+                stbtt_GetCodepointHMetrics(info, i, pAdvance, pLeftBearing);
+                glyphs.put(i, new Glyph(i, pAdvance.get(0), pLeftBearing.get(0)));
+            }
+
+        }
     }
 
     public int getBitmapWidth() {
@@ -51,10 +63,6 @@ public class Font {
 
     public STBTTBakedChar.Buffer getCharData() {
         return charData;
-    }
-
-    public ByteBuffer getTtf() {
-        return ttf;
     }
 
     public Texture getTexture() {
@@ -75,6 +83,10 @@ public class Font {
 
     public int getLineGap() {
         return lineGap;
+    }
+
+    public Glyph getGlyph(int codepoint) {
+        return glyphs.get(codepoint);
     }
 
     public static int getCodePoint(String text, int to, int i, IntBuffer cpOut) {
@@ -106,14 +118,14 @@ public class Font {
                 stbtt_GetCodepointHMetrics(info, codePoint, pAdvancedWidth, pLeftSideBearing);
                 width += pAdvancedWidth.get(0);
 
-                if(Font.KERNING && i < to) {
-                    getCodePoint(text,to,i,pCodePoint);
-                    width += stbtt_GetCodepointKernAdvance(info,codePoint,pCodePoint.get(0));
+                if (Font.KERNING && i < to) {
+                    getCodePoint(text, to, i, pCodePoint);
+                    width += stbtt_GetCodepointKernAdvance(info, codePoint, pCodePoint.get(0));
                 }
 
             }
         }
-        return width * stbtt_ScaleForPixelHeight(info,size);
+        return width * stbtt_ScaleForPixelHeight(info, size);
     }
 //
 //    public int getHeight(String text) {

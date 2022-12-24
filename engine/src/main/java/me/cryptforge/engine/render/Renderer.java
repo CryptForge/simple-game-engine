@@ -38,7 +38,6 @@ public class Renderer {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-
         cachedBuilder = new SpriteBuilder(this);
         modelMatrix = new Matrix4f();
         projectionMatrix = new Matrix3x2f()
@@ -82,7 +81,7 @@ public class Renderer {
             throw new RuntimeException("end without drawing");
         }
         isDrawing = false;
-        vertexBuffer.flush(spriteShader);
+        vertexBuffer.flush(textShader);
     }
 
     /**
@@ -191,51 +190,60 @@ public class Renderer {
     public void drawText(Font font, String text, float x, float y, Color color) {
         final float scale = stbtt_ScaleForPixelHeight(font.getInfo(), font.getSize());
 
+        final float factorX = 1.0f / application.getContentScaleX();
+        final float factorY = 1.0f / application.getContentScaleY();
+
         glActiveTexture(GL_TEXTURE0);
-        textShader.use();
         font.getTexture().bind();
 
+//        modelMatrix.identity()
+//                   .translate(x, y, 0);
+//
+//        spriteShader.setMatrix4f("model", modelMatrix);
+
         try (final MemoryStack stack = MemoryStack.stackPush()) {
-            final IntBuffer pCodePoint = stack.mallocInt(1);
             final FloatBuffer pX = stack.floats(0.0f);
             final FloatBuffer pY = stack.floats(0.0f);
 
             final STBTTAlignedQuad alignedQuad = STBTTAlignedQuad.malloc(stack);
 
-            final float factorX = 1.0f / application.getContentScaleX();
-            final float factorY = 1.0f / application.getContentScaleY();
+            for (int i = 0; i < text.length(); i++) {
+                final int codePoint = Character.codePointAt(text, i);
+                final Glyph glyph = font.getGlyph(codePoint);
 
-            float lineY = 0f;
+                stbtt_GetBakedQuad(
+                        font.getCharData(),
+                        font.getBitmapWidth(),
+                        font.getBitmapHeight(),
+                        codePoint - 32,
+                        pX,
+                        pY,
+                        alignedQuad,
+                        true
+                );
 
-            for (int i = 0, to = text.length(); i < to; ) {
-                i += Font.getCodePoint(text, to, i, pCodePoint);
+                final float xPos = x + glyph.leftBearing() * scale;
+                final float yPos = y - (font.getSize() - glyph.leftBearing()) * scale;
+                final float width = font.getSize() * scale;
+                final float height = font.getSize() * scale;
 
-                final int codePoint = pCodePoint.get(0);
-                if (codePoint == '\n') {
-                    pY.put(0, lineY = pY.get(0) + (font.getAscent() - font.getDescent() + font.getLineGap()) * scale);
-                    pX.put(0, 0.0f);
-                    continue;
-                } else if (codePoint < 32 || 128 <= codePoint) {
-                    continue;
-                }
 
-                float codePointX = pX.get(0);
-                stbtt_GetBakedQuad(font.getCharData(), font.getBitmapWidth(), font.getBitmapHeight(), codePoint - 32, pX, pY, alignedQuad, true);
-                pX.put(0, scale(codePointX, pX.get(0), factorX));
-                if (Font.KERNING && i < to) {
-                    Font.getCodePoint(text, to, i, pCodePoint);
-                    pX.put(0, pX.get(0) + stbtt_GetCodepointKernAdvance(font.getInfo(), codePoint, pCodePoint.get(0)) * scale);
-                }
+                final float offset = pX.get(0);
 
-                final float x0 = scale(codePointX, alignedQuad.x0(), factorX);
-                final float x1 = scale(codePointX, alignedQuad.x1(), factorX);
-                final float y0 = scale(lineY, alignedQuad.y0(), factorY);
-                final float y1 = scale(lineY, alignedQuad.y1(), factorY);
+                final float x0 = alignedQuad.x0();
+                final float x1 = alignedQuad.x1();
+                final float y0 = alignedQuad.y0();
+                final float y1 = alignedQuad.y1();
 
-                vertexBuffer.add(x0, y0, color, alignedQuad.s0(), alignedQuad.t0());
-                vertexBuffer.add(x1, y0, color, alignedQuad.s1(), alignedQuad.t0());
-                vertexBuffer.add(x1, y1, color, alignedQuad.s1(), alignedQuad.t1());
-                vertexBuffer.add(x0, y1, color, alignedQuad.s0(), alignedQuad.t1());
+                drawTexturedRegion(0 + offset,0,font.getSize() + offset,font.getSize(),alignedQuad.s0(),alignedQuad.t0(),alignedQuad.s1(),alignedQuad.t1(),color.r(),color.g(),color.b(),color.a());
+
+//                vertexBuffer.add(0, 0, color, alignedQuad.s0(), alignedQuad.t0());
+//                vertexBuffer.add(32, 0, color, alignedQuad.s1(), alignedQuad.t0());
+//                vertexBuffer.add(32, 32, color, alignedQuad.s1(), alignedQuad.t1());
+//
+//                vertexBuffer.add(0, 32, color, alignedQuad.s0(), alignedQuad.t1());
+//                vertexBuffer.add(32, 32, color, alignedQuad.s0(), alignedQuad.t1());
+//                vertexBuffer.add(32, 0, color, alignedQuad.s0(), alignedQuad.t1());
             }
         }
     }
