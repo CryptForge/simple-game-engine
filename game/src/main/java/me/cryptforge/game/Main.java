@@ -13,6 +13,7 @@ public class Main extends Application {
 
 
     private final Vector2f position;
+    private final Color purple = new Color(154, 31, 242, 0.6f);
     private final float sizeX = 50f, sizeY = 50f;
     private Texture texture;
     private Font font;
@@ -102,13 +103,17 @@ public class Main extends Application {
                     batch.drawSprite(x, y, size, size, Color.GREEN);
                 }
             }
+        });
 
-            batch.drawSprite(position.x, position.y, sizeX, sizeY);
+        renderer.shapeBatch(batch -> {
+            batch.drawRectangle(position.x, position.y, sizeX, sizeY, Color.RED);
+            batch.drawRectangle(10, 420, font.getWidth("Hello World"), font.getAscent() * font.getScale(), purple);
         });
 
         renderer.textBatch(font, batch -> {
-            batch.drawText("Hello World", 20, 100, Color.BLACK);
+            batch.drawText("Hello World", 10, 420, Color.BLACK);
         });
+
     }
 
     public static void main(String[] args) {

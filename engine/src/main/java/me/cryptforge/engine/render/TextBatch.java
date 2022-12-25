@@ -8,7 +8,6 @@ import org.lwjgl.system.MemoryStack;
 import java.nio.FloatBuffer;
 
 import static org.lwjgl.stb.STBTruetype.stbtt_GetBakedQuad;
-import static org.lwjgl.stb.STBTruetype.stbtt_ScaleForPixelHeight;
 
 public final class TextBatch extends RenderBatch {
 
@@ -31,7 +30,7 @@ public final class TextBatch extends RenderBatch {
     }
 
     public void drawText(String text, float x, float y, Color color) {
-        final float scale = stbtt_ScaleForPixelHeight(font.getInfo(), font.getSize());
+        final float scale = font.getScale();
 
         try (final MemoryStack stack = MemoryStack.stackPush()) {
             final FloatBuffer pX = stack.floats(0.0f);
@@ -40,7 +39,7 @@ public final class TextBatch extends RenderBatch {
             final STBTTAlignedQuad alignedQuad = STBTTAlignedQuad.malloc(stack);
 
             pX.put(0, x);
-            pY.put(0, y);
+            pY.put(0, y + (font.getAscent() * scale));
 
             for (int i = 0; i < text.length(); i++) {
                 final char c = text.charAt(i);

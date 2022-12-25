@@ -3,7 +3,6 @@ package me.cryptforge.engine.render;
 import me.cryptforge.engine.Application;
 import me.cryptforge.engine.asset.*;
 import org.joml.Matrix3x2f;
-import org.joml.Matrix4f;
 import org.joml.Vector2f;
 
 import java.util.function.Consumer;
@@ -23,6 +22,7 @@ public class Renderer {
 
     private final SpriteBatch spriteBatch;
     private final TextBatch textBatch;
+    private final ShapeBatch shapeBatch;
 
     private RenderBatch currentBatch;
 
@@ -36,18 +36,22 @@ public class Renderer {
                 .view(0f, application.getWidth(), application.getHeight(), 0f);
 
 
-        // init sprite rendering
+        // init sprite shader
         final Shader spriteShader = AssetManager.loadShader("sprite", AssetPathType.RESOURCE, "shaders/sprite");
         spriteShader.use();
         spriteShader.setInt("image", 0);
         spriteShader.setProjectionMatrix("projection", projectionMatrix);
-        spriteShader.setMatrix4f("model", new Matrix4f());
 
-        // init text rendering
+        // init text shader
         final Shader textShader = AssetManager.loadShader("text", AssetPathType.RESOURCE, "shaders/text");
         textShader.use();
         textShader.setInt("text", 0);
         textShader.setProjectionMatrix("projection", projectionMatrix);
+
+        // init shape shader
+        final Shader shapeShader = AssetManager.loadShader("shape", AssetPathType.RESOURCE, "shaders/shape");
+        shapeShader.use();
+        shapeShader.setProjectionMatrix("projection", projectionMatrix);
 
         vao = new VertexArrayObject();
         vbo = new VertexBufferObject();
@@ -61,6 +65,7 @@ public class Renderer {
 
         spriteBatch = new SpriteBatch(vertexBuffer);
         textBatch = new TextBatch(vertexBuffer);
+        shapeBatch = new ShapeBatch(vertexBuffer);
     }
 
     private void begin() {
@@ -87,6 +92,15 @@ public class Renderer {
         textBatch.init();
         currentBatch = textBatch;
         actions.accept(textBatch);
+        end();
+    }
+
+    public void shapeBatch(Consumer<ShapeBatch> actions) {
+        begin();
+
+        shapeBatch.init();
+        currentBatch = shapeBatch;
+        actions.accept(shapeBatch);
         end();
     }
 
