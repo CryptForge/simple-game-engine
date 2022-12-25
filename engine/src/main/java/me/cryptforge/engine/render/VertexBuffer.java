@@ -1,6 +1,5 @@
 package me.cryptforge.engine.render;
 
-import me.cryptforge.engine.asset.Texture;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.FloatBuffer;
@@ -35,13 +34,6 @@ public final class VertexBuffer implements AutoCloseable {
 
             buffer.flip();
 
-            renderer.getActiveShader().use();
-
-            final Texture activeTexture = renderer.getActiveTexture();
-            if (activeTexture != null) {
-                glActiveTexture(GL_TEXTURE0);
-                activeTexture.bind();
-            }
             vbo.bind(GL_ARRAY_BUFFER);
             vbo.uploadSubData(GL_ARRAY_BUFFER, 0, buffer);
 
@@ -53,7 +45,7 @@ public final class VertexBuffer implements AutoCloseable {
 
     public VertexBuffer vertex(float x, float y, float r, float g, float b, float a, float textureX, float textureY) {
         if (!hasSpace(1)) {
-            flush();
+            renderer.flushBuffer();
         }
         buffer.put(x).put(y).put(r).put(g).put(b).put(a).put(textureX).put(textureY);
         count++;
@@ -62,7 +54,7 @@ public final class VertexBuffer implements AutoCloseable {
 
     public VertexBuffer region(float bottomX, float bottomY, float topX, float topY, float bottomTextureX, float bottomTextureY, float topTextureX, float topTextureY, float r, float g, float b, float a) {
         if (!hasSpace(6)) {
-            flush();
+            renderer.flushBuffer();
         }
         vertex(bottomX, bottomY, r, g, b, a, bottomTextureX, bottomTextureY);
         vertex(bottomX, topY, r, g, b, a, bottomTextureX, topTextureY);

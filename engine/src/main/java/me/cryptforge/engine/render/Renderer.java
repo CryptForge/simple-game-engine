@@ -2,37 +2,29 @@ package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.Application;
 import me.cryptforge.engine.asset.*;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
-import org.lwjgl.stb.STBTTAlignedQuad;
-import org.lwjgl.system.MemoryStack;
 
-import java.nio.FloatBuffer;
+import java.util.function.Consumer;
 
 import static org.lwjgl.opengl.GL33.*;
-import static org.lwjgl.stb.STBTruetype.stbtt_GetBakedQuad;
-import static org.lwjgl.stb.STBTruetype.stbtt_ScaleForPixelHeight;
 
 public class Renderer {
 
     private final Application application;
 
     private final Matrix3x2f projectionMatrix;
-    private final SpriteBuilder cachedBuilder;
 
-    private final Shader spriteShader;
-    private final Shader textShader;
     private final VertexArrayObject vao;
     private final VertexBufferObject vbo;
 
     private final VertexBuffer vertexBuffer;
 
-    private RenderType renderType;
-    private Texture activeTexture;
+    private final SpriteBatch spriteBatch;
+    private final TextBatch textBatch;
 
-    private boolean isDrawing;
+    private RenderBatch currentBatch;
 
     public Renderer(Application application) {
         this.application = application;
@@ -40,21 +32,19 @@ public class Renderer {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
-        cachedBuilder = new SpriteBuilder(this);
         projectionMatrix = new Matrix3x2f()
                 .view(0f, application.getWidth(), application.getHeight(), 0f);
 
 
         // init sprite rendering
-        spriteShader = AssetManager.loadShader("sprite", AssetPathType.RESOURCE, "shaders/sprite");
+        final Shader spriteShader = AssetManager.loadShader("sprite", AssetPathType.RESOURCE, "shaders/sprite");
         spriteShader.use();
         spriteShader.setInt("image", 0);
         spriteShader.setProjectionMatrix("projection", projectionMatrix);
         spriteShader.setMatrix4f("model", new Matrix4f());
 
         // init text rendering
-        textShader = AssetManager.loadShader("text", AssetPathType.RESOURCE, "shaders/text");
+        final Shader textShader = AssetManager.loadShader("text", AssetPathType.RESOURCE, "shaders/text");
         textShader.use();
         textShader.setInt("text", 0);
         textShader.setProjectionMatrix("projection", projectionMatrix);
@@ -68,27 +58,58 @@ public class Renderer {
         vertexBuffer = new VertexBuffer(this);
 
         initVertexAttributes();
+
+        spriteBatch = new SpriteBatch(vertexBuffer);
+        textBatch = new TextBatch(vertexBuffer);
     }
 
-    public void begin(RenderType renderType) {
-        if (isDrawing) {
-            throw new RuntimeException("start during draw");
+    private void begin() {
+        if (currentBatch != null) {
+            throw new RuntimeException("Cannot start multiple batches at once");
         }
-        this.renderType = renderType;
-        isDrawing = true;
         vertexBuffer.clear();
     }
 
-    public void end() {
-        if (!isDrawing) {
-            throw new RuntimeException("end without drawing");
+    public void spriteBatch(Texture texture, Consumer<SpriteBatch> actions) {
+        begin();
+
+        spriteBatch.setTexture(texture);
+        spriteBatch.init();
+        currentBatch = spriteBatch;
+        actions.accept(spriteBatch);
+        end();
+    }
+
+    public void textBatch(Font font, Consumer<TextBatch> actions) {
+        begin();
+
+        textBatch.setFont(font);
+        textBatch.init();
+        currentBatch = textBatch;
+        actions.accept(textBatch);
+        end();
+    }
+
+    private void end() {
+        if (currentBatch == null) {
+            throw new RuntimeException("Cannot end batch without starting");
         }
-        isDrawing = false;
 
+        flushBuffer();
+
+        currentBatch.clear();
+        currentBatch = null;
+    }
+
+    protected void flushBuffer() {
+        currentBatch.getShader().use();
+
+        final Texture texture = currentBatch.getTexture();
+        if (texture != null) {
+            glActiveTexture(GL_TEXTURE0);
+            texture.bind();
+        }
         vertexBuffer.flush();
-
-        renderType = null;
-        activeTexture = null;
     }
 
     /**
@@ -108,67 +129,6 @@ public class Renderer {
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    /**
-     * Creates a sprite builder
-     *
-     * @param texture Texture to draw
-     * @return A new sprite builder
-     */
-    public SpriteBuilder sprite(Texture texture) {
-        return cachedBuilder.reset().texture(texture);
-    }
-
-    public void drawSprite(Texture texture, float posX, float posY, float sizeX, float sizeY, float r, float g, float b, float a) {
-        setActiveTexture(texture);
-
-        vertexBuffer.region(posX, posY, posX + sizeX, posY + sizeY, 0, 0, 1, 1, r, g, b, a);
-    }
-
-    public void drawText(Font font, String text, float x, float y, Color color) {
-        final float scale = stbtt_ScaleForPixelHeight(font.getInfo(), font.getSize());
-
-        setActiveTexture(font.getTexture());
-
-        try (final MemoryStack stack = MemoryStack.stackPush()) {
-            final FloatBuffer pX = stack.floats(0.0f);
-            final FloatBuffer pY = stack.floats(0.0f);
-
-            final STBTTAlignedQuad alignedQuad = STBTTAlignedQuad.malloc(stack);
-
-            pX.put(0, x);
-            pY.put(0, y);
-
-            for (int i = 0; i < text.length(); i++) {
-                final char c = text.charAt(i);
-                final int codePoint = Character.codePointAt(text, i);
-
-                if (c == '\n') {
-                    pX.put(0, x);
-                    pY.put(0, pY.get(0) + (font.getAscent() - font.getDescent() + font.getLineGap()) * scale);
-                    continue;
-                }
-
-                stbtt_GetBakedQuad(
-                        font.getCharData(),
-                        font.getBitmapWidth(),
-                        font.getBitmapHeight(),
-                        codePoint - 32,
-                        pX,
-                        pY,
-                        alignedQuad,
-                        true
-                );
-
-                final float x0 = alignedQuad.x0();
-                final float x1 = alignedQuad.x1();
-                final float y0 = alignedQuad.y0();
-                final float y1 = alignedQuad.y1();
-
-                vertexBuffer.region(x0, y0, x1, y1, alignedQuad.s0(), alignedQuad.t0(), alignedQuad.s1(), alignedQuad.t1(), color);
-            }
-        }
-    }
-
     public Vector2f convertMouseToWorld(float mouseX, float mouseY) {
         return projectionMatrix
                 .unproject(
@@ -183,34 +143,23 @@ public class Renderer {
         // x, y, r, g, b, a, textureX, textureY
 
         // position
-        spriteShader.initAttribute(0, 2, 8 * Float.BYTES, 0);
+        initAttribute(0, 2, 8 * Float.BYTES, 0);
         // color
-        spriteShader.initAttribute(1, 4, 8 * Float.BYTES, 2 * Float.BYTES);
+        initAttribute(1, 4, 8 * Float.BYTES, 2 * Float.BYTES);
         // texture coordinates
-        spriteShader.initAttribute(2, 2, 8 * Float.BYTES, 6 * Float.BYTES);
+        initAttribute(2, 2, 8 * Float.BYTES, 6 * Float.BYTES);
     }
 
-    private void setActiveTexture(@NotNull Texture texture) {
-        if (activeTexture != null && !activeTexture.equals(texture)) {
-            throw new RuntimeException("Attempted to change texture twice during draw session");
-        }
-        activeTexture = texture;
+    public void initAttribute(int index, int size, int stride, int offset) {
+        glVertexAttribPointer(index,size,GL_FLOAT,false,stride,offset);
+        glEnableVertexAttribArray(index);
     }
 
-    public Shader getActiveShader() {
-        return renderType == RenderType.SPRITE ? spriteShader : textShader;
-    }
-
-    public Texture getActiveTexture() {
-        return activeTexture;
-    }
-
-
-    public VertexBufferObject vbo() {
+    protected VertexBufferObject vbo() {
         return vbo;
     }
 
-    public VertexArrayObject vao() {
+    protected VertexArrayObject vao() {
         return vao;
     }
 }
