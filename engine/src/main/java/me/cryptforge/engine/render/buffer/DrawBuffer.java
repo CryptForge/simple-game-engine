@@ -15,7 +15,7 @@ public interface DrawBuffer {
     int count();
 
     default boolean hasSpace(int count) {
-        return (count() + count) >= capacity();
+        return (count() + count) <= capacity();
     }
 
 }

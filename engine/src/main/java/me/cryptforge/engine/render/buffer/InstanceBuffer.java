@@ -72,7 +72,7 @@ public final class InstanceBuffer implements DrawBuffer {
     }
 
     public InstanceBuffer putInstance(float r, float g, float b, float a, Matrix4f matrix) {
-        if (count >= capacity) {
+        if (!hasSpace(1)) {
             renderer.flushBuffer();
         }
         buffer.put(r).put(g).put(b).put(a);
