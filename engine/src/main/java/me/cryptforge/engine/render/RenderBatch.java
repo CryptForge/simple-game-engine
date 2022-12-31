@@ -2,15 +2,16 @@ package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.asset.Shader;
 import me.cryptforge.engine.asset.Texture;
+import me.cryptforge.engine.render.buffer.DrawBuffer;
 
-public abstract class RenderBatch {
+public abstract class RenderBatch<T extends DrawBuffer> {
 
-    private final VertexBuffer vertexBuffer;
+    private final T buffer;
     private final Shader shader;
     private Texture texture;
 
-    public RenderBatch(VertexBuffer vertexBuffer,Shader shader) {
-        this.vertexBuffer = vertexBuffer;
+    public RenderBatch(T buffer, Shader shader) {
+        this.buffer = buffer;
         this.shader = shader;
     }
 
@@ -31,8 +32,8 @@ public abstract class RenderBatch {
         this.texture = texture;
     }
 
-    protected VertexBuffer vertexBuffer() {
-        return vertexBuffer;
+    protected T buffer() {
+        return buffer;
     }
 
     public Texture getTexture() {

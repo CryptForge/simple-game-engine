@@ -46,11 +46,10 @@ public class Font {
                 stbtt_GetCodepointHMetrics(info, i, pAdvance, pLeftBearing);
                 glyphs.put(i, new Glyph(i, pAdvance.get(0), pLeftBearing.get(0)));
             }
-
         }
     }
 
-    public float getWidth(String text) {
+    public float getTextWidth(String text) {
         int width = 0;
 
         for (int i = 0; i < text.length(); i++) {
@@ -61,6 +60,10 @@ public class Font {
         }
 
         return width * getScale();
+    }
+
+    public float getTextHeight() {
+        return getAscent() * getScale();
     }
 
     public float getScale() {

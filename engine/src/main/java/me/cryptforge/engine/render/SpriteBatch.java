@@ -1,11 +1,16 @@
 package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.asset.AssetManager;
+import me.cryptforge.engine.render.buffer.InstanceBuffer;
+import org.joml.Matrix4f;
 
-public final class SpriteBatch extends RenderBatch {
+public final class SpriteBatch extends RenderBatch<InstanceBuffer> {
 
-    public SpriteBatch(VertexBuffer vertexBuffer) {
-        super(vertexBuffer, AssetManager.getShader("sprite"));
+    private final Matrix4f model;
+
+    public SpriteBatch(InstanceBuffer buffer) {
+        super(buffer, AssetManager.getShader("sprite"));
+        model = new Matrix4f();
     }
 
     @Override
@@ -13,6 +18,7 @@ public final class SpriteBatch extends RenderBatch {
         if(getTexture() == null) {
             throw new IllegalStateException("Texture is null for sprite batch");
         }
+        buffer().clear();
     }
 
     @Override
@@ -21,7 +27,7 @@ public final class SpriteBatch extends RenderBatch {
     }
 
     public void drawSprite(float posX, float posY, float sizeX, float sizeY, Color color) {
-        vertexBuffer().region(posX, posY, posX + sizeX, posY + sizeY, 0, 0, 1, 1, color);
+        buffer().putInstance(color,model.identity().translation(posX,posY,0).scale(sizeX,sizeY,0));
     }
 
     public void drawSprite(float posX, float posY, float sizeX, float sizeY) {

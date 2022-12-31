@@ -2,6 +2,8 @@ package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.Application;
 import me.cryptforge.engine.asset.*;
+import me.cryptforge.engine.render.buffer.InstanceBuffer;
+import me.cryptforge.engine.render.buffer.VertexBuffer;
 import org.joml.Matrix3x2f;
 import org.joml.Vector2f;
 
@@ -15,16 +17,14 @@ public class Renderer {
 
     private final Matrix3x2f projectionMatrix;
 
-    private final VertexArrayObject vao;
-    private final VertexBufferObject vbo;
-
+    private final InstanceBuffer instanceBuffer;
     private final VertexBuffer vertexBuffer;
 
     private final SpriteBatch spriteBatch;
     private final TextBatch textBatch;
     private final ShapeBatch shapeBatch;
 
-    private RenderBatch currentBatch;
+    private RenderBatch<?> currentBatch;
 
     public Renderer(Application application) {
         this.application = application;
@@ -53,58 +53,52 @@ public class Renderer {
         shapeShader.use();
         shapeShader.setProjectionMatrix("projection", projectionMatrix);
 
-        vao = new VertexArrayObject();
-        vbo = new VertexBufferObject();
+        instanceBuffer = new InstanceBuffer(this, 512);
+        instanceBuffer.init();
+        vertexBuffer = new VertexBuffer(this,1024);
+        vertexBuffer.init();
 
-        vao.bind();
-        vbo.bind(GL_ARRAY_BUFFER);
-
-        vertexBuffer = new VertexBuffer(this);
-
-        initVertexAttributes();
-
-        spriteBatch = new SpriteBatch(vertexBuffer);
+        spriteBatch = new SpriteBatch(instanceBuffer);
         textBatch = new TextBatch(vertexBuffer);
         shapeBatch = new ShapeBatch(vertexBuffer);
     }
 
-    private void begin() {
+    public void spriteBatch(Texture texture, Consumer<SpriteBatch> actions) {
         if (currentBatch != null) {
             throw new RuntimeException("Cannot start multiple batches at once");
         }
-        vertexBuffer.clear();
-    }
-
-    public void spriteBatch(Texture texture, Consumer<SpriteBatch> actions) {
-        begin();
 
         spriteBatch.setTexture(texture);
         spriteBatch.init();
         currentBatch = spriteBatch;
         actions.accept(spriteBatch);
-        end();
+        finishCurrentBatch();
     }
 
     public void textBatch(Font font, Consumer<TextBatch> actions) {
-        begin();
+        if (currentBatch != null) {
+            throw new RuntimeException("Cannot start multiple batches at once");
+        }
 
         textBatch.setFont(font);
         textBatch.init();
         currentBatch = textBatch;
         actions.accept(textBatch);
-        end();
+        finishCurrentBatch();
     }
 
     public void shapeBatch(Consumer<ShapeBatch> actions) {
-        begin();
+        if (currentBatch != null) {
+            throw new RuntimeException("Cannot start multiple batches at once");
+        }
 
         shapeBatch.init();
         currentBatch = shapeBatch;
         actions.accept(shapeBatch);
-        end();
+        finishCurrentBatch();
     }
 
-    private void end() {
+    private void finishCurrentBatch() {
         if (currentBatch == null) {
             throw new RuntimeException("Cannot end batch without starting");
         }
@@ -115,7 +109,7 @@ public class Renderer {
         currentBatch = null;
     }
 
-    protected void flushBuffer() {
+    public void flushBuffer() {
         currentBatch.getShader().use();
 
         final Texture texture = currentBatch.getTexture();
@@ -123,7 +117,7 @@ public class Renderer {
             glActiveTexture(GL_TEXTURE0);
             texture.bind();
         }
-        vertexBuffer.flush();
+        currentBatch.buffer().flush();
     }
 
     /**
@@ -151,29 +145,5 @@ public class Renderer {
                         new int[]{0, 0, application.getWidth(), application.getHeight()},
                         new Vector2f()
                 );
-    }
-
-    private void initVertexAttributes() {
-        // x, y, r, g, b, a, textureX, textureY
-
-        // position
-        initAttribute(0, 2, 8 * Float.BYTES, 0);
-        // color
-        initAttribute(1, 4, 8 * Float.BYTES, 2 * Float.BYTES);
-        // texture coordinates
-        initAttribute(2, 2, 8 * Float.BYTES, 6 * Float.BYTES);
-    }
-
-    public void initAttribute(int index, int size, int stride, int offset) {
-        glVertexAttribPointer(index,size,GL_FLOAT,false,stride,offset);
-        glEnableVertexAttribArray(index);
-    }
-
-    protected VertexBufferObject vbo() {
-        return vbo;
-    }
-
-    protected VertexArrayObject vao() {
-        return vao;
     }
 }

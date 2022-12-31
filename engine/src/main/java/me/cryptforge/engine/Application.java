@@ -29,9 +29,10 @@ public abstract class Application {
     private int width, height;
     private final Map<Integer, Integer> keyboardMap;
     private final Map<Integer, Integer> mouseMap;
-    private Renderer renderer;
 
-    private int targetFramerate;
+    private final double updateRate = 60;
+    private final double updateDelta = 1.0 / updateRate;
+    private Renderer renderer;
     private boolean vsync;
 
     /**
@@ -41,15 +42,13 @@ public abstract class Application {
      * @param width           Initial window width
      * @param height          Initial window height
      * @param resizeable      Can window be resized
-     * @param targetFramerate Framerate cap
      * @param vsync           V-Sync
      */
-    public Application(String title, int width, int height, boolean resizeable, int targetFramerate, boolean vsync) {
+    public Application(String title, int width, int height, boolean resizeable, boolean vsync) {
         this.worldWidth = width;
         this.worldHeight = height;
         this.width = width;
         this.height = height;
-        this.targetFramerate = targetFramerate;
         this.vsync = vsync;
 
         keyboardMap = new HashMap<>();
@@ -109,6 +108,12 @@ public abstract class Application {
     public void onMouse(MouseButton button, InputAction action, float x, float y) {
     }
 
+    /**
+     * Called when the game has been
+     */
+    public void onClose() {
+    }
+
     public void run() {
         // Setup and show window
         center();
@@ -142,23 +147,23 @@ public abstract class Application {
 
         // Start loop
         while (!glfwWindowShouldClose(windowId)) {
-            glfwPollEvents();
             double deltaTime = glfwGetTime() - oldTime;
             oldTime = glfwGetTime();
 
-            if (Math.abs(deltaTime - 1.0 / 60.0) < .0002) {
+            if (Math.abs(deltaTime - 1.0 / 60.0) < 0.0002) {
                 deltaTime = 1.0 / 60.0;
             }
             accumulator += deltaTime;
 
-            while (accumulator >= 1.0 / 60.0) {
+            while (accumulator >= updateDelta) {
                 update();
-                accumulator -= 1.0 / 60.0;
+                accumulator -= updateDelta;
             }
 
             render(renderer);
 
             glfwSwapBuffers(windowId);
+            glfwPollEvents();
         }
 
         glfwFreeCallbacks(windowId);
@@ -166,6 +171,8 @@ public abstract class Application {
 
         glfwTerminate();
         glfwSetErrorCallback(null).free();
+
+        onClose();
     }
 
     private void handleKeyboard(long window, int key, int scancode, int action, int mods) {
@@ -270,10 +277,6 @@ public abstract class Application {
                     (vidMode.height() - pHeight.get(0)) / 2
             );
         }
-    }
-
-    public void setTargetFramerate(int targetFramerate) {
-        this.targetFramerate = targetFramerate;
     }
 
     /**

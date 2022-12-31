@@ -11,7 +11,6 @@ import org.joml.Vector2f;
 
 public class Main extends Application {
 
-
     private final Vector2f position;
     private final Color purple = new Color(154, 31, 242, 0.6f);
     private final float sizeX = 50f, sizeY = 50f;
@@ -20,7 +19,7 @@ public class Main extends Application {
 
 
     public Main() {
-        super("game engine test", 800, 480, true, 60, true);
+        super("game engine test", 800, 480, true, true);
         position = new Vector2f(0, 0);
     }
 
@@ -96,9 +95,9 @@ public class Main extends Application {
 
         renderer.spriteBatch(texture, batch -> {
             final int size = 50;
-            for (int i = 0; i < 12; i++) {
+            for (int i = 0; i < 5; i++) {
                 int x = i * size;
-                for (int j = 0; j < 8; j++) {
+                for (int j = 0; j < 5; j++) {
                     int y = j * size;
                     batch.drawSprite(x, y, size, size, Color.GREEN);
                 }
@@ -107,7 +106,7 @@ public class Main extends Application {
 
         renderer.shapeBatch(batch -> {
             batch.drawRectangle(position.x, position.y, sizeX, sizeY, Color.RED);
-            batch.drawRectangle(10, 420, font.getWidth("Hello World"), font.getAscent() * font.getScale(), purple);
+            batch.drawRectangle(10, 420, font.getTextWidth("Hello World"), font.getAscent() * font.getScale(), purple);
         });
 
         renderer.textBatch(font, batch -> {

@@ -2,6 +2,7 @@ package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.asset.AssetManager;
 import me.cryptforge.engine.asset.Font;
+import me.cryptforge.engine.render.buffer.VertexBuffer;
 import org.lwjgl.stb.STBTTAlignedQuad;
 import org.lwjgl.system.MemoryStack;
 
@@ -9,12 +10,12 @@ import java.nio.FloatBuffer;
 
 import static org.lwjgl.stb.STBTruetype.stbtt_GetBakedQuad;
 
-public final class TextBatch extends RenderBatch {
+public final class TextBatch extends RenderBatch<VertexBuffer> {
 
     private Font font;
 
-    public TextBatch(VertexBuffer vertexBuffer) {
-        super(vertexBuffer, AssetManager.getShader("text"));
+    public TextBatch(VertexBuffer buffer) {
+        super(buffer, AssetManager.getShader("text"));
     }
 
     @Override
@@ -22,6 +23,7 @@ public final class TextBatch extends RenderBatch {
         if(font == null) {
             throw new IllegalStateException("Font is null in text batch");
         }
+        buffer().clear();
     }
 
     @Override
@@ -66,10 +68,19 @@ public final class TextBatch extends RenderBatch {
                 final float x1 = alignedQuad.x1();
                 final float y0 = alignedQuad.y0();
                 final float y1 = alignedQuad.y1();
+                final float s0 = alignedQuad.s0();
+                final float s1 = alignedQuad.s1();
+                final float t0 = alignedQuad.t0();
+                final float t1 = alignedQuad.t1();
 
-                vertexBuffer().region(x0, y0, x1, y1, alignedQuad.s0(), alignedQuad.t0(), alignedQuad.s1(), alignedQuad.t1(), color);
+                buffer().putRegion(x0, y0, x1, y1, s0, t0, s1, t1, color);
             }
         }
+    }
+
+    public void drawTextCentered(String text, float x, float y, Color color) {
+        final float textWidth = font.getTextWidth(text);
+        drawText(text,x - (textWidth / 2),y - (font.getSize() / 2f),color);
     }
 
     void setFont(Font font) {

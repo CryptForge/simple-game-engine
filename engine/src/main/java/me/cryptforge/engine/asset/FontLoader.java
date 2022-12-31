@@ -72,7 +72,10 @@ public class FontLoader extends AssetLoader<Font, Integer> {
 
         MemoryUtil.memFree(bitmap);
 
-        return new Font(info, charData, texture,data, fontSize, ascent, descent, lineGap, bitmapWidth, bitmapHeight);
+        final Font font = new Font(info, charData, texture,data, fontSize, ascent, descent, lineGap, bitmapWidth, bitmapHeight);
+        fonts.put(id,font);
+
+        return font;
     }
 
     private static Texture createBitmapTexture(ByteBuffer buffer, int width, int height) {

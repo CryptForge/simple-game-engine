@@ -14,6 +14,10 @@ public class VertexArrayObject {
         glBindVertexArray(id);
     }
 
+    public void unbind() {
+        glBindVertexArray(0);
+    }
+
     public void delete() {
         glDeleteVertexArrays(id);
     }

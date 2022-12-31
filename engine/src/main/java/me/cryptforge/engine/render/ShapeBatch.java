@@ -1,16 +1,17 @@
 package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.asset.AssetManager;
+import me.cryptforge.engine.render.buffer.VertexBuffer;
 
-public class ShapeBatch extends RenderBatch {
+public class ShapeBatch extends RenderBatch<VertexBuffer> {
 
-    public ShapeBatch(VertexBuffer vertexBuffer) {
-        super(vertexBuffer, AssetManager.getShader("shape"));
+    public ShapeBatch(VertexBuffer buffer) {
+        super(buffer, AssetManager.getShader("shape"));
     }
 
     @Override
     void init() {
-
+        buffer().clear();
     }
 
     @Override
@@ -23,6 +24,6 @@ public class ShapeBatch extends RenderBatch {
     }
 
     public void drawRectangle(float x, float y, float sizeX, float sizeY, Color color) {
-        vertexBuffer().region(x, y, x + sizeX, y + sizeY, 0, 0, 0, 0, color);
+        buffer().putRegion(x, y, x + sizeX, y + sizeY, 0, 0, 0, 0, color);
     }
 }

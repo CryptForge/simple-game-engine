@@ -7,7 +7,8 @@ group = "me.cryptforge"
 version = "1.0"
 
 val lwjglVersion = "3.3.1"
-val lwjglNatives = "natives-windows"
+val windowsNatives = "natives-windows"
+val linuxNatives = "natives-linux"
 
 repositories {
     mavenCentral()
@@ -27,13 +28,24 @@ dependencies {
     implementation("org.lwjgl", "lwjgl-openal")
     implementation("org.lwjgl", "lwjgl-opengl")
     implementation("org.lwjgl", "lwjgl-stb")
-    runtimeOnly("org.lwjgl", "lwjgl", classifier = lwjglNatives)
-    runtimeOnly("org.lwjgl", "lwjgl-assimp", classifier = lwjglNatives)
-    runtimeOnly("org.lwjgl", "lwjgl-glfw", classifier = lwjglNatives)
-    runtimeOnly("org.lwjgl", "lwjgl-nfd", classifier = lwjglNatives)
-    runtimeOnly("org.lwjgl", "lwjgl-openal", classifier = lwjglNatives)
-    runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = lwjglNatives)
-    runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = lwjglNatives)
+
+    // Windows natives
+    runtimeOnly("org.lwjgl", "lwjgl", classifier = windowsNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-assimp", classifier = windowsNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-glfw", classifier = windowsNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-nfd", classifier = windowsNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-openal", classifier = windowsNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = windowsNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = windowsNatives)
+
+    // Linux natives
+    runtimeOnly("org.lwjgl", "lwjgl", classifier = linuxNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-assimp", classifier = linuxNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-glfw", classifier = linuxNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-nfd", classifier = linuxNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-openal", classifier = linuxNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = linuxNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = linuxNatives)
 }
 
 publishing {
