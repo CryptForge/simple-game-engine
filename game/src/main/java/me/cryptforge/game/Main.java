@@ -1,7 +1,10 @@
 package me.cryptforge.game;
 
 import me.cryptforge.engine.Application;
-import me.cryptforge.engine.asset.*;
+import me.cryptforge.engine.asset.Asset;
+import me.cryptforge.engine.asset.Assets;
+import me.cryptforge.engine.asset.TextureFilter;
+import me.cryptforge.engine.asset.TextureSettings;
 import me.cryptforge.engine.input.InputAction;
 import me.cryptforge.engine.input.KeyboardKey;
 import me.cryptforge.engine.render.Color;

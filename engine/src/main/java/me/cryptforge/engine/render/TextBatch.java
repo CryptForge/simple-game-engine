@@ -1,6 +1,7 @@
 package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.asset.Assets;
+import me.cryptforge.engine.asset.Glyph;
 import me.cryptforge.engine.asset.type.Font;
 import me.cryptforge.engine.render.buffer.VertexBuffer;
 import org.lwjgl.stb.STBTTAlignedQuad;
@@ -46,7 +47,12 @@ public final class TextBatch extends RenderBatch<VertexBuffer> {
             for (int i = 0; i < text.length(); i++) {
                 final char c = text.charAt(i);
                 final int codePoint = Character.codePointAt(text, i);
+                final Glyph glyph = font.getGlyph(codePoint);
 
+                if(c == ' ') {
+                    pX.put(0,pX.get(0) + glyph.advance() * scale);
+                    continue;
+                }
                 if (c == '\n') {
                     pX.put(0, x);
                     pY.put(0, pY.get(0) + (font.getAscent() - font.getDescent() + font.getLineGap()) * scale);

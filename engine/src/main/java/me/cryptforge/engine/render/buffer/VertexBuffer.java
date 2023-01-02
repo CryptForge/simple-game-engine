@@ -74,7 +74,7 @@ public final class VertexBuffer implements DrawBuffer {
             vbo.uploadSubData(GL_ARRAY_BUFFER, 0, buffer);
 
             vao.bind();
-            glDrawArrays(GL_TRIANGLES, 0, count * VERTEX_SIZE);
+            glDrawArrays(GL_TRIANGLES, 0, count * 6);
             vao.unbind();
 
             clear();
