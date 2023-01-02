@@ -1,4 +1,4 @@
-package me.cryptforge.game;
+package me.cryptforge.demo;
 
 import me.cryptforge.engine.Application;
 import me.cryptforge.engine.asset.Asset;
@@ -21,9 +21,9 @@ public class Main extends Application {
         setWindowSize(854, 480);
 
         Assets.load(loader -> {
-            loader.texture("test", Asset.external("assets/textures/test.png"), TextureSettings.builder().generateMipmap(true).downscaleFilter(TextureFilter.LINEAR_MIPMAP_LINEAR).build());
-            loader.texture("button", Asset.external("assets/textures/button.png"), TextureSettings.defaultSettings());
-            loader.font("font", Asset.external("assets/fonts/NotoSans-Regular.ttf"), 96);
+            loader.texture("test", Asset.internal("textures/test.png"), TextureSettings.builder().generateMipmap(true).downscaleFilter(TextureFilter.LINEAR_MIPMAP_LINEAR).build());
+            loader.texture("button", Asset.internal("textures/button.png"), TextureSettings.defaultSettings());
+            loader.font("font", Asset.internal("fonts/NotoSans-Regular.ttf"), 96);
         });
 
         setScene(new TestScene(this));

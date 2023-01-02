@@ -1,4 +1,4 @@
-package me.cryptforge.game;
+package me.cryptforge.demo;
 
 import me.cryptforge.engine.asset.type.Texture;
 import me.cryptforge.engine.world.GameObject;

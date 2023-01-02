@@ -1,4 +1,4 @@
-package me.cryptforge.game;
+package me.cryptforge.demo;
 
 import me.cryptforge.engine.Application;
 import me.cryptforge.engine.asset.Assets;
