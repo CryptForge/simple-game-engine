@@ -1,8 +1,8 @@
 package me.cryptforge.game;
 
 import me.cryptforge.engine.Application;
-import me.cryptforge.engine.asset.AssetManager;
-import me.cryptforge.engine.asset.Texture;
+import me.cryptforge.engine.asset.Assets;
+import me.cryptforge.engine.asset.type.Texture;
 import me.cryptforge.engine.render.Color;
 import me.cryptforge.engine.render.Renderer;
 import me.cryptforge.engine.world.Scene;
@@ -17,8 +17,8 @@ public final class TestScene extends Scene {
 
     @Override
     public void init() {
-        final Texture testTexture = AssetManager.getTexture("test");
-        final Texture buttonTexture = AssetManager.getTexture("button");
+        final Texture testTexture = Assets.texture("test");
+        final Texture buttonTexture = Assets.texture("button");
 
         final float offsetX = 0;
         final float offsetY = 200;
@@ -40,7 +40,7 @@ public final class TestScene extends Scene {
 
         final float x = application.getWorldWidth() / 2f;
         final float y = application.getWorldHeight() - 80f;
-        renderer.textBatch(AssetManager.getFont("font"), batch -> {
+        renderer.textBatch(Assets.font("font"), batch -> {
             batch.drawTextCentered("Objects: " + gameObjects().size(), x, y, Color.GREEN);
         });
     }

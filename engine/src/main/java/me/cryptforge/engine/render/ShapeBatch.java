@@ -1,12 +1,12 @@
 package me.cryptforge.engine.render;
 
-import me.cryptforge.engine.asset.AssetManager;
+import me.cryptforge.engine.asset.Assets;
 import me.cryptforge.engine.render.buffer.VertexBuffer;
 
 public class ShapeBatch extends RenderBatch<VertexBuffer> {
 
     public ShapeBatch(VertexBuffer buffer) {
-        super(buffer, AssetManager.getShader("shape"));
+        super(buffer, Assets.shader("shape"));
     }
 
     @Override

@@ -1,5 +1,7 @@
-package me.cryptforge.engine.asset;
+package me.cryptforge.engine.asset.type;
 
+import me.cryptforge.engine.asset.Glyph;
+import org.jetbrains.annotations.ApiStatus;
 import org.lwjgl.stb.STBTTBakedChar;
 import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.system.MemoryStack;
@@ -26,6 +28,7 @@ public class Font {
     private final int bitmapWidth;
     private final int bitmapHeight;
 
+    @ApiStatus.Internal
     public Font(STBTTFontinfo info, STBTTBakedChar.Buffer charData, Texture texture, ByteBuffer data, int size, int ascent, int descent, int lineGap, int bitmapWidth, int bitmapHeight) {
         this.info = info;
         this.charData = charData;

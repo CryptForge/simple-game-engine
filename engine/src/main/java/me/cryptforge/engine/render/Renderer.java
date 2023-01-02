@@ -2,6 +2,9 @@ package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.Application;
 import me.cryptforge.engine.asset.*;
+import me.cryptforge.engine.asset.type.Font;
+import me.cryptforge.engine.asset.type.Shader;
+import me.cryptforge.engine.asset.type.Texture;
 import me.cryptforge.engine.render.buffer.InstanceBuffer;
 import me.cryptforge.engine.render.buffer.VertexBuffer;
 import org.joml.Matrix3x2f;
@@ -35,21 +38,26 @@ public class Renderer {
         projectionMatrix = new Matrix3x2f()
                 .view(0f, application.getWorldWidth(), application.getWorldHeight(), 0f);
 
+        Assets.load(loader -> {
+            loader.shader("sprite", Asset.internal("shaders/sprite.vert"), Asset.internal("shaders/sprite.frag"));
+            loader.shader("text", Asset.internal("shaders/text.vert"), Asset.internal("shaders/text.frag"));
+            loader.shader("shape", Asset.internal("shaders/shape.vert"), Asset.internal("shaders/shape.frag"));
+        });
 
         // init sprite shader
-        final Shader spriteShader = AssetManager.loadShader("sprite", AssetPathType.RESOURCE, "shaders/sprite");
+        final Shader spriteShader = Assets.shader("sprite");
         spriteShader.use();
         spriteShader.setInt("image", 0);
         spriteShader.setProjectionMatrix("projection", projectionMatrix);
 
         // init text shader
-        final Shader textShader = AssetManager.loadShader("text", AssetPathType.RESOURCE, "shaders/text");
+        final Shader textShader = Assets.shader("text");
         textShader.use();
         textShader.setInt("text", 0);
         textShader.setProjectionMatrix("projection", projectionMatrix);
 
         // init shape shader
-        final Shader shapeShader = AssetManager.loadShader("shape", AssetPathType.RESOURCE, "shaders/shape");
+        final Shader shapeShader = Assets.shader("shape");
         shapeShader.use();
         shapeShader.setProjectionMatrix("projection", projectionMatrix);
 

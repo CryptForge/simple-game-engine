@@ -1,6 +1,6 @@
 package me.cryptforge.engine.world;
 
-import me.cryptforge.engine.asset.Texture;
+import me.cryptforge.engine.asset.type.Texture;
 import me.cryptforge.engine.render.Color;
 
 import java.util.UUID;

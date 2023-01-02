@@ -1,6 +1,6 @@
 package me.cryptforge.game;
 
-import me.cryptforge.engine.asset.Texture;
+import me.cryptforge.engine.asset.type.Texture;
 import me.cryptforge.engine.world.GameObject;
 
 public final class TestObject extends GameObject {

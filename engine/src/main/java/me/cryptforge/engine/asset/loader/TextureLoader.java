@@ -1,7 +1,10 @@
-package me.cryptforge.engine.asset;
+package me.cryptforge.engine.asset.loader;
 
+import me.cryptforge.engine.asset.Asset;
+import me.cryptforge.engine.asset.TextureSettings;
+import me.cryptforge.engine.asset.type.Texture;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
@@ -10,25 +13,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.glGenerateMipmap;
 import static org.lwjgl.stb.STBImage.stbi_image_free;
 import static org.lwjgl.stb.STBImage.stbi_load_from_memory;
 
-final class TextureLoader extends AssetLoader<Texture, TextureSettings> {
-
-    private final Map<String, Texture> textures = new HashMap<>();
-
-    @Override
-    protected @Nullable Texture get(String id) {
-        return textures.get(id);
-    }
+@ApiStatus.Internal
+public final class TextureLoader extends AssetLoader<Texture, TextureSettings> {
 
     @Override
-    protected @NotNull Texture load(String id, AssetPathType pathType, String path, TextureSettings settings) throws FileNotFoundException {
+    public @NotNull Texture load(Asset asset, TextureSettings settings) throws FileNotFoundException {
         final int textureId = glGenTextures();
 
         final int desiredChannels = settings.hasAlpha() ? 4 : 3;
@@ -43,7 +38,7 @@ final class TextureLoader extends AssetLoader<Texture, TextureSettings> {
             final IntBuffer bHeight = stack.mallocInt(1);
             final IntBuffer bChannelCount = stack.mallocInt(1);
 
-            try (final InputStream stream = pathType.openStream(path)) {
+            try (final InputStream stream = asset.openStream()) {
                 final byte[] bytes = stream.readAllBytes();
 
                 final ByteBuffer rawData = MemoryUtil.memAlloc(bytes.length).put(bytes);
@@ -79,10 +74,6 @@ final class TextureLoader extends AssetLoader<Texture, TextureSettings> {
 
         stbi_image_free(data);
 
-        final Texture texture = new Texture(textureId, width, height, channelCount);
-
-        textures.put(id, texture);
-
-        return texture;
+        return new Texture(textureId, width, height, channelCount);
     }
 }

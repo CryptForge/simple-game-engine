@@ -1,7 +1,7 @@
 package me.cryptforge.engine.render;
 
-import me.cryptforge.engine.asset.AssetManager;
-import me.cryptforge.engine.asset.Font;
+import me.cryptforge.engine.asset.Assets;
+import me.cryptforge.engine.asset.type.Font;
 import me.cryptforge.engine.render.buffer.VertexBuffer;
 import org.lwjgl.stb.STBTTAlignedQuad;
 import org.lwjgl.system.MemoryStack;
@@ -15,7 +15,7 @@ public final class TextBatch extends RenderBatch<VertexBuffer> {
     private Font font;
 
     public TextBatch(VertexBuffer buffer) {
-        super(buffer, AssetManager.getShader("text"));
+        super(buffer, Assets.shader("text"));
     }
 
     @Override

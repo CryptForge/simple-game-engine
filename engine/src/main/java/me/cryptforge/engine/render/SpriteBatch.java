@@ -1,6 +1,6 @@
 package me.cryptforge.engine.render;
 
-import me.cryptforge.engine.asset.AssetManager;
+import me.cryptforge.engine.asset.Assets;
 import me.cryptforge.engine.render.buffer.InstanceBuffer;
 import org.joml.Matrix4f;
 
@@ -8,7 +8,7 @@ public final class SpriteBatch extends RenderBatch<InstanceBuffer> {
 
 
     public SpriteBatch(InstanceBuffer buffer) {
-        super(buffer, AssetManager.getShader("sprite"));
+        super(buffer, Assets.shader("sprite"));
     }
 
     @Override

@@ -1,35 +1,29 @@
-package me.cryptforge.engine.asset;
+package me.cryptforge.engine.asset.loader;
 
+import me.cryptforge.engine.asset.Asset;
+import me.cryptforge.engine.asset.type.Shader;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.lwjgl.opengl.GL33.*;
 
-final class ShaderLoader extends AssetLoader<Shader, Void> {
-
-    private final Map<String,Shader> shaders = new HashMap<>();
-
-    @Override
-    protected @Nullable Shader get(String id) {
-        return shaders.get(id);
-    }
+@ApiStatus.Internal
+public final class ShaderLoader extends AssetLoader<Shader, Asset> {
 
     @Override
-    protected @NotNull Shader load(String id, AssetPathType pathType, String path, Void data) throws FileNotFoundException {
-        final String vertexCode = readAsset(pathType,path + ".vert");
-        final String fragmentCode = readAsset(pathType,path + ".frag");
+    public @NotNull Shader load(Asset vertexFile, Asset fragmentFile) throws FileNotFoundException {
+        final String vertexCode = readAsset(vertexFile);
+        final String fragmentCode = readAsset(fragmentFile);
 
         final int vertexId = glCreateShader(GL_VERTEX_SHADER);
         {
             final String log = compileShader(vertexId, vertexCode);
             if (!log.isEmpty()) {
-                System.err.println("Failed to compile vertex shader \"" + path + ".vert\"");
+                System.err.println("Failed to compile vertex shader \"" + vertexFile.path() + ".vert\"");
                 System.err.println(log);
             }
         }
@@ -39,7 +33,7 @@ final class ShaderLoader extends AssetLoader<Shader, Void> {
         {
             final String log = compileShader(fragmentId, fragmentCode);
             if (!log.isEmpty()) {
-                System.err.println("Failed to compile fragment shader \"" + path + ".frag\"");
+                System.err.println("Failed to compile fragment shader \"" + fragmentFile.path() + ".frag\"");
                 System.err.println(log);
             }
         }
@@ -61,9 +55,7 @@ final class ShaderLoader extends AssetLoader<Shader, Void> {
         glDeleteShader(vertexId);
         glDeleteShader(fragmentId);
 
-        final Shader shader = new Shader(shaderId);
-        shaders.put(id,shader);
-        return shader;
+        return new Shader(shaderId);
     }
 
     /**
@@ -88,12 +80,11 @@ final class ShaderLoader extends AssetLoader<Shader, Void> {
 
     /**
      * Reads an asset into a string
-     * @param pathType Type of path
-     * @param path Path to asset
+     * @param asset The asset to read
      * @return Asset contents
      */
-    private String readAsset(AssetPathType pathType,String path) throws FileNotFoundException {
-        try (final InputStream inputStream = pathType.openStream(path)) {
+    private String readAsset(Asset asset) throws FileNotFoundException {
+        try (final InputStream inputStream = asset.openStream()) {
             final InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
             final BufferedReader bufferedReader = new BufferedReader(reader);
 

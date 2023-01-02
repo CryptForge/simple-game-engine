@@ -1,7 +1,7 @@
 package me.cryptforge.engine.render;
 
-import me.cryptforge.engine.asset.Shader;
-import me.cryptforge.engine.asset.Texture;
+import me.cryptforge.engine.asset.type.Shader;
+import me.cryptforge.engine.asset.type.Texture;
 import me.cryptforge.engine.render.buffer.DrawBuffer;
 
 public abstract class RenderBatch<T extends DrawBuffer> {

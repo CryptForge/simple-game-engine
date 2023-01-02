@@ -9,33 +9,22 @@ import me.cryptforge.engine.render.Renderer;
 
 public class Main extends Application {
 
-    private Font font;
-
-
     public Main() {
         super("game engine test", 1920, 1080, true, true, 60, 60);
     }
 
     @Override
     public void init() {
-        setWindowSize(854,480);
+        setWindowSize(854, 480);
 
-        AssetManager.loadTexture(
-                "test",
-                AssetPathType.FILE,
-                "assets/textures/test.png",
-                TextureSettings.builder()
-                               .generateMipmap(true)
-                               .downscaleFilter(TextureFilter.LINEAR_MIPMAP_LINEAR)
-                               .build()
-        );
-
-        AssetManager.loadTexture("button", AssetPathType.FILE, "assets/textures/button.png", TextureSettings.defaultSettings());
-
-        font = AssetManager.loadFont("font", AssetPathType.FILE, "assets/fonts/NotoSans-Regular.ttf", 96);
+        Assets.load(loader -> {
+            loader.texture("test", Asset.external("assets/textures/test.png"), TextureSettings.builder().generateMipmap(true).downscaleFilter(TextureFilter.LINEAR_MIPMAP_LINEAR).build());
+            loader.texture("button", Asset.external("assets/textures/button.png"), TextureSettings.defaultSettings());
+            loader.font("font", Asset.external("assets/fonts/NotoSans-Regular.ttf"), 96);
+        });
 
         setScene(new TestScene(this));
-        setClearColor(new Color(0,0,120,1f));
+        setClearColor(new Color(0, 0, 120, 1f));
     }
 
     @Override
@@ -55,7 +44,7 @@ public class Main extends Application {
 
     @Override
     public void render(Renderer renderer) {
-        renderer.textBatch(font, batch -> {
+        renderer.textBatch(Assets.font("font"), batch -> {
             batch.drawTextCentered("Current Scene: " + getScene().toString(), getWorldWidth() / 2f, 80, Color.BLACK);
         });
     }

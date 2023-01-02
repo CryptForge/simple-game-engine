@@ -1,7 +1,10 @@
-package me.cryptforge.engine.asset;
+package me.cryptforge.engine.asset.loader;
 
+import me.cryptforge.engine.asset.Asset;
+import me.cryptforge.engine.asset.type.Font;
+import me.cryptforge.engine.asset.type.Texture;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.stb.STBTTBakedChar;
 import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.system.MemoryStack;
@@ -12,27 +15,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
 import static org.lwjgl.stb.STBTruetype.*;
 
+@ApiStatus.Internal
 public class FontLoader extends AssetLoader<Font, Integer> {
 
-    private final Map<String, Font> fonts = new HashMap<>();
-
     @Override
-    protected @Nullable Font get(String id) {
-        return fonts.get(id);
-    }
-
-    @Override
-    protected @NotNull Font load(String id, AssetPathType pathType, String path, Integer fontSize) throws FileNotFoundException {
+    public @NotNull Font load(Asset asset, Integer fontSize) throws FileNotFoundException {
         final ByteBuffer data;
 
-        try (final InputStream stream = pathType.openStream(path)) {
+        try (final InputStream stream = asset.openStream()) {
             final byte[] bytes = stream.readAllBytes();
             data = MemoryUtil.memAlloc(bytes.length).put(bytes);
             data.flip();
@@ -72,10 +67,7 @@ public class FontLoader extends AssetLoader<Font, Integer> {
 
         MemoryUtil.memFree(bitmap);
 
-        final Font font = new Font(info, charData, texture,data, fontSize, ascent, descent, lineGap, bitmapWidth, bitmapHeight);
-        fonts.put(id,font);
-
-        return font;
+        return new Font(info, charData, texture,data, fontSize, ascent, descent, lineGap, bitmapWidth, bitmapHeight);
     }
 
     private static Texture createBitmapTexture(ByteBuffer buffer, int width, int height) {

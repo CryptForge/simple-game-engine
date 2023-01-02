@@ -1,4 +1,6 @@
-package me.cryptforge.engine.asset;
+package me.cryptforge.engine.asset.type;
+
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Objects;
 
@@ -13,7 +15,8 @@ public class Texture {
     private final int height;
     private final int channelCount;
 
-    protected Texture(int id, int width, int height, int channelCount) {
+    @ApiStatus.Internal
+    public Texture(int id, int width, int height, int channelCount) {
         this.id = id;
         this.width = width;
         this.height = height;

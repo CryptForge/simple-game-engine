@@ -1,5 +1,6 @@
-package me.cryptforge.engine.asset;
+package me.cryptforge.engine.asset.type;
 
+import org.jetbrains.annotations.ApiStatus;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4fc;
 import org.joml.Vector3fc;
@@ -13,7 +14,8 @@ public class Shader {
 
     private final int id;
 
-    protected Shader(int id) {
+    @ApiStatus.Internal
+    public Shader(int id) {
         this.id = id;
     }
 
