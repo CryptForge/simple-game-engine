@@ -33,7 +33,7 @@ public class Renderer {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         projectionMatrix = new Matrix3x2f()
-                .view(0f, application.getWidth(), application.getHeight(), 0f);
+                .view(0f, application.getWorldWidth(), application.getWorldHeight(), 0f);
 
 
         // init sprite shader
@@ -53,9 +53,9 @@ public class Renderer {
         shapeShader.use();
         shapeShader.setProjectionMatrix("projection", projectionMatrix);
 
-        instanceBuffer = new InstanceBuffer(this, 512);
+        instanceBuffer = new InstanceBuffer(this, 12288);
         instanceBuffer.init();
-        vertexBuffer = new VertexBuffer(this,1024);
+        vertexBuffer = new VertexBuffer(this,4096);
         vertexBuffer.init();
 
         spriteBatch = new SpriteBatch(instanceBuffer);
@@ -118,23 +118,6 @@ public class Renderer {
             texture.bind();
         }
         currentBatch.buffer().flush();
-    }
-
-    /**
-     * Clears the screen with specified color
-     *
-     * @param red   Red (0-255)
-     * @param green Green (0-255)
-     * @param blue  Blue (0-255)
-     * @param alpha Alpha (0-1)
-     */
-    public void clear(int red, int green, int blue, float alpha) {
-        glClearColor(
-                Math.min(Math.abs(red), 255f) / 255f,
-                Math.min(Math.abs(green), 255f) / 255f,
-                Math.min(Math.abs(blue), 255f) / 255f,
-                alpha);
-        glClear(GL_COLOR_BUFFER_BIT);
     }
 
     public Vector2f convertMouseToWorld(float mouseX, float mouseY) {

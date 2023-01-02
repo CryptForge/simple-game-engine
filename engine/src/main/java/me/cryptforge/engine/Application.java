@@ -3,12 +3,16 @@ package me.cryptforge.engine;
 import me.cryptforge.engine.input.InputAction;
 import me.cryptforge.engine.input.KeyboardKey;
 import me.cryptforge.engine.input.MouseButton;
+import me.cryptforge.engine.render.Color;
 import me.cryptforge.engine.render.Renderer;
+import me.cryptforge.engine.util.Sync;
+import me.cryptforge.engine.world.Scene;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector2f;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL33;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.DoubleBuffer;
@@ -18,6 +22,7 @@ import java.util.Map;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL33.glViewport;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
@@ -30,26 +35,35 @@ public abstract class Application {
     private final Map<Integer, Integer> keyboardMap;
     private final Map<Integer, Integer> mouseMap;
 
-    private final double updateRate = 60;
-    private final double updateDelta = 1.0 / updateRate;
+    private final int updateRate;
+    private final int targetFramerate;
+    private final double updateDelta;
     private Renderer renderer;
+    private Color clearColor;
     private boolean vsync;
+    private Scene scene;
 
     /**
      * Creates a window
      *
-     * @param title           Window title
-     * @param width           Initial window width
-     * @param height          Initial window height
-     * @param resizeable      Can window be resized
-     * @param vsync           V-Sync
+     * @param title       Window title
+     * @param worldWidth  World width
+     * @param worldHeight World height
+     * @param resizeable  Can window be resized
+     * @param vsync       V-Sync
      */
-    public Application(String title, int width, int height, boolean resizeable, boolean vsync) {
-        this.worldWidth = width;
-        this.worldHeight = height;
-        this.width = width;
-        this.height = height;
+    public Application(String title, int worldWidth, int worldHeight, boolean resizeable, boolean vsync, int updateRate, int targetFramerate) {
+        this.worldWidth = worldWidth;
+        this.worldHeight = worldHeight;
+        this.width = worldWidth;
+        this.height = worldHeight;
         this.vsync = vsync;
+        this.updateRate = updateRate;
+        this.targetFramerate = targetFramerate;
+
+        updateDelta = 1.0 / updateRate;
+
+        clearColor = Color.BLACK;
 
         keyboardMap = new HashMap<>();
         mouseMap = new HashMap<>();
@@ -147,23 +161,28 @@ public abstract class Application {
 
         // Start loop
         while (!glfwWindowShouldClose(windowId)) {
-            double deltaTime = glfwGetTime() - oldTime;
+            double deltaTime = Sync.snapDelta(glfwGetTime() - oldTime);
             oldTime = glfwGetTime();
-
-            if (Math.abs(deltaTime - 1.0 / 60.0) < 0.0002) {
-                deltaTime = 1.0 / 60.0;
-            }
             accumulator += deltaTime;
 
             while (accumulator >= updateDelta) {
                 update();
+                if(scene != null) {
+                    scene.update();
+                }
                 accumulator -= updateDelta;
             }
 
+            GL33.glClear(GL_COLOR_BUFFER_BIT);
+            if(scene != null) {
+                scene.render(renderer);
+            }
             render(renderer);
 
             glfwSwapBuffers(windowId);
             glfwPollEvents();
+
+            Sync.sync(targetFramerate);
         }
 
         glfwFreeCallbacks(windowId);
@@ -260,6 +279,13 @@ public abstract class Application {
         glfwSetWindowPos(windowId, x, y);
     }
 
+    public void setWindowSize(int width, int height) {
+        glfwSetWindowSize(windowId, width, height);
+        glViewport(0, 0, width, height);
+        this.width = width;
+        this.height = height;
+    }
+
     /**
      * Centers the window
      */
@@ -279,6 +305,24 @@ public abstract class Application {
         }
     }
 
+    public void setScene(Scene scene) {
+        if (this.scene != null) {
+            this.scene.terminate();
+        }
+        if (scene != null) {
+            this.scene = scene;
+            this.scene.init();
+        }
+    }
+
+    public Scene getScene() {
+        return scene;
+    }
+
+    public double getTime() {
+        return glfwGetTime();
+    }
+
     /**
      * Enables or disables v-sync
      *
@@ -287,6 +331,15 @@ public abstract class Application {
     public void setVsync(boolean vsync) {
         this.vsync = vsync;
         glfwSwapInterval(vsync ? 1 : 0);
+    }
+
+    public void setClearColor(Color clearColor) {
+        this.clearColor = clearColor;
+        GL33.glClearColor(clearColor.r(),clearColor.g(),clearColor.b(),clearColor.a());
+    }
+
+    public Color getClearColor() {
+        return clearColor;
     }
 
     /**

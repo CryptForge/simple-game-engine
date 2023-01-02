@@ -7,6 +7,7 @@ import me.cryptforge.engine.render.VertexBufferObject;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryUtil;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
 import static me.cryptforge.engine.util.GLUtils.initAttribute;
@@ -18,7 +19,8 @@ public final class InstanceBuffer implements DrawBuffer {
     private final VertexArrayObject vao;
     private final VertexBufferObject vertexVbo;
     private final VertexBufferObject instanceVbo;
-    private final FloatBuffer buffer;
+    private final FloatBuffer instanceBuffer;
+    private final ByteBuffer indexBuffer;
     private final int capacity;
     private int count;
 
@@ -28,7 +30,8 @@ public final class InstanceBuffer implements DrawBuffer {
         vao = new VertexArrayObject();
         vertexVbo = new VertexBufferObject();
         instanceVbo = new VertexBufferObject();
-        buffer = MemoryUtil.memAllocFloat(capacity * 20);
+        instanceBuffer = MemoryUtil.memAllocFloat(capacity * 20);
+        indexBuffer = MemoryUtil.memAlloc(6);
     }
 
     @Override
@@ -42,13 +45,10 @@ public final class InstanceBuffer implements DrawBuffer {
         final float[] vertices = new float[]{
                 0, 0, 0, 0,
                 0, 1, 0, 1,
-                1, 1, 1, 1,
-                0, 0, 0, 0,
-                1, 1, 1, 1,
-                1, 0, 1, 0
+                1, 0, 1, 0,
+                1, 1, 1, 1
         };
         vertexVbo.uploadData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW);
-
 
         instanceVbo.bind(GL_ARRAY_BUFFER);
         // init instance attributes
@@ -69,16 +69,20 @@ public final class InstanceBuffer implements DrawBuffer {
         // set instance vbo buffer size
         final long size = (long) capacity * 20L * Float.BYTES;
         instanceVbo.uploadData(GL_ARRAY_BUFFER, size, GL_DYNAMIC_DRAW);
+
+        // set indices
+        indexBuffer.put(new byte[]{0, 1, 3, 0, 3, 2});
+        indexBuffer.flip();
     }
 
     public InstanceBuffer putInstance(float r, float g, float b, float a, Matrix4f matrix) {
         if (!hasSpace(1)) {
             renderer.flushBuffer();
         }
-        buffer.put(r).put(g).put(b).put(a);
+        instanceBuffer.put(r).put(g).put(b).put(a);
 
-        matrix.get(buffer);
-        buffer.position(buffer.position() + 16);
+        matrix.get(instanceBuffer);
+        instanceBuffer.position(instanceBuffer.position() + 16);
         count++;
         return this;
     }
@@ -90,13 +94,13 @@ public final class InstanceBuffer implements DrawBuffer {
     @Override
     public void flush() {
         if (count > 0) {
-            buffer.flip();
+            instanceBuffer.flip();
 
             instanceVbo.bind(GL_ARRAY_BUFFER);
-            instanceVbo.uploadSubData(GL_ARRAY_BUFFER, 0, buffer);
+            instanceVbo.uploadSubData(GL_ARRAY_BUFFER, 0, instanceBuffer);
 
             vao.bind();
-            glDrawArraysInstanced(GL_TRIANGLES, 0, 6, count);
+            glDrawElementsInstanced(GL_TRIANGLES, indexBuffer, count);
             vao.unbind();
 
             clear();
@@ -105,13 +109,13 @@ public final class InstanceBuffer implements DrawBuffer {
 
     @Override
     public void clear() {
-        buffer.clear();
+        instanceBuffer.clear();
         count = 0;
     }
 
     @Override
     public void free() {
-        MemoryUtil.memFree(buffer);
+        MemoryUtil.memFree(instanceBuffer);
     }
 
     @Override
