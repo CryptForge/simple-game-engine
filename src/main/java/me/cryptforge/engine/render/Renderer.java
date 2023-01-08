@@ -1,6 +1,7 @@
 package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.Application;
+import me.cryptforge.engine.Drawable;
 import me.cryptforge.engine.asset.*;
 import me.cryptforge.engine.asset.type.Font;
 import me.cryptforge.engine.asset.type.Shader;
@@ -10,7 +11,11 @@ import me.cryptforge.engine.render.buffer.VertexBuffer;
 import org.joml.Matrix3x2f;
 import org.joml.Vector2f;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static org.lwjgl.opengl.GL33.*;
 
@@ -61,7 +66,7 @@ public class Renderer {
         shapeShader.use();
         shapeShader.setProjectionMatrix("projection", projectionMatrix);
 
-        instanceBuffer = new InstanceBuffer(this, 12288);
+        instanceBuffer = new InstanceBuffer(this, 25600);
         instanceBuffer.init();
         vertexBuffer = new VertexBuffer(this,4096);
         vertexBuffer.init();
@@ -69,6 +74,20 @@ public class Renderer {
         spriteBatch = new SpriteBatch(instanceBuffer);
         textBatch = new TextBatch(vertexBuffer);
         shapeBatch = new ShapeBatch(vertexBuffer);
+    }
+
+    public void drawAll(Collection<? extends Drawable> drawables) {
+        final Map<Texture, List<Drawable>> grouped = drawables.stream().collect(Collectors.groupingBy(Drawable::texture));
+
+        for (final var entry : grouped.entrySet()) {
+            final Texture texture = entry.getKey();
+            final List<Drawable> objects = entry.getValue();
+            spriteBatch(texture, batch -> {
+                for (Drawable object : objects) {
+                    batch.drawSprite(object.transform(), object.color());
+                }
+            });
+        }
     }
 
     public void spriteBatch(Texture texture, Consumer<SpriteBatch> actions) {

@@ -4,6 +4,7 @@ import me.cryptforge.engine.render.Color;
 import me.cryptforge.engine.render.Renderer;
 import me.cryptforge.engine.render.VertexArrayObject;
 import me.cryptforge.engine.render.VertexBufferObject;
+import org.joml.Matrix3x2f;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryUtil;
 
@@ -30,7 +31,7 @@ public final class InstanceBuffer implements DrawBuffer {
         vao = new VertexArrayObject();
         vertexVbo = new VertexBufferObject();
         instanceVbo = new VertexBufferObject();
-        instanceBuffer = MemoryUtil.memAllocFloat(capacity * 20);
+        instanceBuffer = MemoryUtil.memAllocFloat(capacity * 10);
         indexBuffer = MemoryUtil.memAlloc(6);
     }
 
@@ -52,22 +53,20 @@ public final class InstanceBuffer implements DrawBuffer {
 
         instanceVbo.bind(GL_ARRAY_BUFFER);
         // init instance attributes
-        initAttribute(1, 4, 20 * Float.BYTES, 0); // color (vec4)
+        initAttribute(1, 4, 10 * Float.BYTES, 0); // color (vec4)
 
-        // model matrix (vec4, vec4, vec4, vec4)
-        initAttribute(2, 4, 20 * Float.BYTES, 4 * Float.BYTES);
-        initAttribute(3, 4, 20 * Float.BYTES, 8 * Float.BYTES);
-        initAttribute(4, 4, 20 * Float.BYTES, 12 * Float.BYTES);
-        initAttribute(5, 4, 20 * Float.BYTES, 16 * Float.BYTES);
+        // model matrix (vec2 vec2 vec2)
+        initAttribute(2, 2, 10 * Float.BYTES, 4 * Float.BYTES);
+        initAttribute(3, 2, 10 * Float.BYTES, 6 * Float.BYTES);
+        initAttribute(4, 2, 10 * Float.BYTES, 8 * Float.BYTES);
 
         glVertexAttribDivisor(1, 1);
         glVertexAttribDivisor(2, 1);
         glVertexAttribDivisor(3, 1);
         glVertexAttribDivisor(4, 1);
-        glVertexAttribDivisor(5, 1);
 
         // set instance vbo buffer size
-        final long size = (long) capacity * 20L * Float.BYTES;
+        final long size = (long) capacity * 10L * Float.BYTES;
         instanceVbo.uploadData(GL_ARRAY_BUFFER, size, GL_DYNAMIC_DRAW);
 
         // set indices
@@ -75,19 +74,19 @@ public final class InstanceBuffer implements DrawBuffer {
         indexBuffer.flip();
     }
 
-    public InstanceBuffer putInstance(float r, float g, float b, float a, Matrix4f matrix) {
+    public InstanceBuffer putInstance(float r, float g, float b, float a, Matrix3x2f matrix) {
         if (!hasSpace(1)) {
             renderer.flushBuffer();
         }
         instanceBuffer.put(r).put(g).put(b).put(a);
 
         matrix.get(instanceBuffer);
-        instanceBuffer.position(instanceBuffer.position() + 16);
+        instanceBuffer.position(instanceBuffer.position() + 6);
         count++;
         return this;
     }
 
-    public InstanceBuffer putInstance(Color color, Matrix4f matrix) {
+    public InstanceBuffer putInstance(Color color, Matrix3x2f matrix) {
         return putInstance(color.r(), color.g(), color.b(), color.a(), matrix);
     }
 

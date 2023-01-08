@@ -6,7 +6,6 @@ import me.cryptforge.engine.input.MouseButton;
 import me.cryptforge.engine.render.Color;
 import me.cryptforge.engine.render.Renderer;
 import me.cryptforge.engine.util.Sync;
-import me.cryptforge.engine.world.Scene;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector2f;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -41,7 +40,6 @@ public abstract class Application {
     private Renderer renderer;
     private Color clearColor;
     private boolean vsync;
-    private Scene scene;
 
     /**
      * Creates a window
@@ -167,16 +165,10 @@ public abstract class Application {
 
             while (accumulator >= updateDelta) {
                 update();
-                if(scene != null) {
-                    scene.update();
-                }
                 accumulator -= updateDelta;
             }
 
             GL33.glClear(GL_COLOR_BUFFER_BIT);
-            if(scene != null) {
-                scene.render(renderer);
-            }
             render(renderer);
 
             glfwSwapBuffers(windowId);
@@ -303,20 +295,6 @@ public abstract class Application {
                     (vidMode.height() - pHeight.get(0)) / 2
             );
         }
-    }
-
-    public void setScene(Scene scene) {
-        if (this.scene != null) {
-            this.scene.terminate();
-        }
-        if (scene != null) {
-            this.scene = scene;
-            this.scene.init();
-        }
-    }
-
-    public Scene getScene() {
-        return scene;
     }
 
     public double getTime() {

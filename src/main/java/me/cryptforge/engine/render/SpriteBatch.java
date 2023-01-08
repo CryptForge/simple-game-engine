@@ -2,7 +2,7 @@ package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.asset.Assets;
 import me.cryptforge.engine.render.buffer.InstanceBuffer;
-import org.joml.Matrix4f;
+import org.joml.Matrix3x2f;
 
 public final class SpriteBatch extends RenderBatch<InstanceBuffer> {
 
@@ -24,7 +24,7 @@ public final class SpriteBatch extends RenderBatch<InstanceBuffer> {
 
     }
 
-    public void drawSprite(Matrix4f modelMatrix, Color color) {
+    public void drawSprite(Matrix3x2f modelMatrix, Color color) {
         buffer().putInstance(color,modelMatrix);
     }
 }

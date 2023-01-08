@@ -10,7 +10,13 @@ import me.cryptforge.engine.input.KeyboardKey;
 import me.cryptforge.engine.render.Color;
 import me.cryptforge.engine.render.Renderer;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class Main extends Application {
+
+    private final Set<TestObject> objects = new HashSet<>();
+    private int counter;
 
     public Main() {
         super("game engine test", 1920, 1080, true, true, 60, 60);
@@ -26,13 +32,21 @@ public class Main extends Application {
             loader.font("font", Asset.internal("fonts/NotoSans-Regular.ttf"), 96);
         });
 
-        setScene(new TestScene(this));
         setClearColor(new Color(0, 0, 120, 1f));
+
+        final int size = 20;
+        for(int x = 0; x < 100; x++) {
+            for(int y = 0; y < 50; y++) {
+                objects.add(new TestObject(Assets.texture("test"),x * size, y * size, size));
+            }
+        }
     }
 
     @Override
     public void update() {
+        objects.forEach(TestObject::update);
 
+        counter++;
     }
 
     @Override
@@ -47,8 +61,10 @@ public class Main extends Application {
 
     @Override
     public void render(Renderer renderer) {
+        renderer.drawAll(objects);
+
         renderer.textBatch(Assets.font("font"), batch -> {
-            batch.drawTextCentered("Current Scene: " + getScene().toString(), getWorldWidth() / 2f, 80, Color.BLACK);
+            batch.drawTextCentered("Counter: " + counter, getWorldWidth() / 2f, 80, Color.GREEN);
         });
     }
 

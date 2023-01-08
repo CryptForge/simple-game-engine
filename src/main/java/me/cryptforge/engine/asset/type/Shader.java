@@ -52,8 +52,8 @@ public class Shader {
 
     public void setProjectionMatrix(String name, Matrix3x2f matrix) {
         try (final MemoryStack stack = MemoryStack.stackPush()) {
-            final FloatBuffer floatBuffer = matrix.get4x4(stack.mallocFloat(16));
-            glUniformMatrix4fv(glGetUniformLocation(id, name), false, floatBuffer);
+            final FloatBuffer floatBuffer = matrix.get(stack.mallocFloat(6));
+            glUniformMatrix3x2fv(glGetUniformLocation(id, name), false, floatBuffer);
         }
     }
 

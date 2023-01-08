@@ -5,10 +5,10 @@ layout(location = 1) in vec4 inTextColor;
 out vec2 TexCoords;
 out vec4 textColor;
 
-uniform mat4 projection;
+uniform mat3x2 projection;
 
 void main() {
-    gl_Position = projection * vec4(coordinates.xy, 0.0, 1.0);
+    gl_Position = vec4(projection * vec3(coordinates.xy,1.0), 0.0, 1.0);
     TexCoords = coordinates.zw;
     textColor = inTextColor;
 }
