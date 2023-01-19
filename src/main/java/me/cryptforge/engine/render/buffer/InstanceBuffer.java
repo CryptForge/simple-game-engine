@@ -22,6 +22,7 @@ public final class InstanceBuffer implements DrawBuffer {
     private final VertexBufferObject instanceVbo;
     private final FloatBuffer instanceBuffer;
     private final ByteBuffer indexBuffer;
+    private final Matrix3x2f matrix;
     private final int capacity;
     private int count;
 
@@ -33,6 +34,7 @@ public final class InstanceBuffer implements DrawBuffer {
         instanceVbo = new VertexBufferObject();
         instanceBuffer = MemoryUtil.memAllocFloat(capacity * INSTANCE_SIZE);
         indexBuffer = MemoryUtil.memAlloc(6);
+        matrix = new Matrix3x2f();
     }
 
     @Override
@@ -82,9 +84,8 @@ public final class InstanceBuffer implements DrawBuffer {
         }
         instanceBuffer.put(r).put(g).put(b).put(a).put(texWidth).put(texHeight).put(texX).put(texY);
 
-        final Matrix3x2f projectionModel = new Matrix3x2f();
-        renderer.getProjectionMatrix().mul(matrix, projectionModel);
-        projectionModel.get(instanceBuffer);
+        renderer.getProjectionMatrix().mul(matrix, this.matrix);
+        this.matrix.get(instanceBuffer);
         instanceBuffer.position(instanceBuffer.position() + 6);
         count++;
         return this;
