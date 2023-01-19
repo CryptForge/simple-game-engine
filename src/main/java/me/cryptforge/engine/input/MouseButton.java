@@ -15,7 +15,7 @@ public enum MouseButton {
         this.glfwKey = glfwKey;
     }
 
-    public int glfwKey() {
+    public int glfwCode() {
         return glfwKey;
     }
 

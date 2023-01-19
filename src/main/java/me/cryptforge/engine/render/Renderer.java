@@ -2,12 +2,13 @@ package me.cryptforge.engine.render;
 
 import me.cryptforge.engine.Application;
 import me.cryptforge.engine.Drawable;
-import me.cryptforge.engine.asset.*;
+import me.cryptforge.engine.Freeable;
+import me.cryptforge.engine.asset.Asset;
+import me.cryptforge.engine.asset.Assets;
 import me.cryptforge.engine.asset.type.Font;
 import me.cryptforge.engine.asset.type.Shader;
 import me.cryptforge.engine.asset.type.Texture;
 import me.cryptforge.engine.render.buffer.InstanceBuffer;
-import me.cryptforge.engine.render.buffer.VertexBuffer;
 import org.joml.Matrix3x2f;
 import org.joml.Vector2f;
 
@@ -19,14 +20,13 @@ import java.util.stream.Collectors;
 
 import static org.lwjgl.opengl.GL33.*;
 
-public class Renderer {
+public class Renderer implements Freeable {
 
     private final Application application;
 
     private final Matrix3x2f projectionMatrix;
 
     private final InstanceBuffer instanceBuffer;
-    private final VertexBuffer vertexBuffer;
 
     private final SpriteBatch spriteBatch;
     private final TextBatch textBatch;
@@ -53,27 +53,18 @@ public class Renderer {
         final Shader spriteShader = Assets.shader("sprite");
         spriteShader.use();
         spriteShader.setInt("image", 0);
-        spriteShader.setProjectionMatrix("projection", projectionMatrix);
 
         // init text shader
         final Shader textShader = Assets.shader("text");
         textShader.use();
-        textShader.setInt("text", 0);
-        textShader.setProjectionMatrix("projection", projectionMatrix);
-
-        // init shape shader
-        final Shader shapeShader = Assets.shader("shape");
-        shapeShader.use();
-        shapeShader.setProjectionMatrix("projection", projectionMatrix);
+        textShader.setInt("bitmap", 0);
 
         instanceBuffer = new InstanceBuffer(this, 25600);
         instanceBuffer.init();
-        vertexBuffer = new VertexBuffer(this,4096);
-        vertexBuffer.init();
 
         spriteBatch = new SpriteBatch(instanceBuffer);
-        textBatch = new TextBatch(vertexBuffer);
-        shapeBatch = new ShapeBatch(vertexBuffer);
+        textBatch = new TextBatch(instanceBuffer);
+        shapeBatch = new ShapeBatch(instanceBuffer);
     }
 
     public void drawAll(Collection<? extends Drawable> drawables) {
@@ -155,5 +146,14 @@ public class Renderer {
                         new int[]{0, 0, application.getWidth(), application.getHeight()},
                         new Vector2f()
                 );
+    }
+
+    public Matrix3x2f getProjectionMatrix() {
+        return projectionMatrix;
+    }
+
+    @Override
+    public void free() {
+        instanceBuffer.free();
     }
 }

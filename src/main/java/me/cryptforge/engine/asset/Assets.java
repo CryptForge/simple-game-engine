@@ -1,5 +1,6 @@
 package me.cryptforge.engine.asset;
 
+import me.cryptforge.engine.Freeable;
 import me.cryptforge.engine.asset.loader.FontLoader;
 import me.cryptforge.engine.asset.loader.ShaderLoader;
 import me.cryptforge.engine.asset.loader.TextureLoader;
@@ -126,5 +127,11 @@ public final class Assets {
             throw new UnknownAssetException("Font", id);
         }
         return font;
+    }
+
+    public static void freeAll() {
+        fonts.values().forEach(Freeable::free);
+        shaders.values().forEach(Freeable::free);
+        textures.values().forEach(Freeable::free);
     }
 }

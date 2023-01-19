@@ -11,6 +11,7 @@ import java.nio.FloatBuffer;
 import static me.cryptforge.engine.util.GLUtils.initAttribute;
 import static org.lwjgl.opengl.GL33.*;
 
+@Deprecated
 public final class VertexBuffer implements DrawBuffer {
 
     private static final int VERTEX_SIZE = 8;

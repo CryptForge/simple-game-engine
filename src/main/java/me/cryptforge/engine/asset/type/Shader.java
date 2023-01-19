@@ -1,5 +1,6 @@
 package me.cryptforge.engine.asset.type;
 
+import me.cryptforge.engine.Freeable;
 import org.jetbrains.annotations.ApiStatus;
 import org.joml.Matrix3x2f;
 import org.joml.Matrix4fc;
@@ -10,7 +11,7 @@ import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL33.*;
 
-public class Shader {
+public class Shader implements Freeable {
 
     private final int id;
 
@@ -21,10 +22,6 @@ public class Shader {
 
     public void use() {
         glUseProgram(id);
-    }
-
-    public void delete() {
-        glDeleteProgram(id);
     }
 
     public void setFloat(String name, float value) {
@@ -57,4 +54,8 @@ public class Shader {
         }
     }
 
+    @Override
+    public void free() {
+        glDeleteProgram(id);
+    }
 }

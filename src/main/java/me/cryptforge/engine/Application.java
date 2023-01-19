@@ -1,5 +1,6 @@
 package me.cryptforge.engine;
 
+import me.cryptforge.engine.asset.Assets;
 import me.cryptforge.engine.input.InputAction;
 import me.cryptforge.engine.input.KeyboardKey;
 import me.cryptforge.engine.input.MouseButton;
@@ -83,6 +84,8 @@ public abstract class Application {
 
         if (windowId == NULL)
             throw new RuntimeException("Failed to create GLFW window");
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::exit));
     }
 
     /**
@@ -183,6 +186,9 @@ public abstract class Application {
         glfwTerminate();
         glfwSetErrorCallback(null).free();
 
+        Assets.freeAll();
+        renderer.free();
+
         onClose();
     }
 
@@ -242,15 +248,15 @@ public abstract class Application {
      * @return If the key is currently pressed
      */
     public boolean isKeyPressed(@NotNull KeyboardKey key) {
-        if (!keyboardMap.containsKey(key.glfwKey()))
+        if (!keyboardMap.containsKey(key.glfwCode()))
             return false;
-        return keyboardMap.get(key.glfwKey()) == GLFW_PRESS;
+        return keyboardMap.get(key.glfwCode()) == GLFW_PRESS;
     }
 
     public boolean isMouseButtonPressed(@NotNull MouseButton button) {
-        if (!mouseMap.containsKey(button.glfwKey()))
+        if (!mouseMap.containsKey(button.glfwCode()))
             return false;
-        return mouseMap.get(button.glfwKey()) == GLFW_PRESS;
+        return mouseMap.get(button.glfwCode()) == GLFW_PRESS;
     }
 
     public Vector2f getMousePosition() {

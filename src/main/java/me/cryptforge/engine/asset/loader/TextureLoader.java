@@ -64,8 +64,8 @@ public final class TextureLoader extends AssetLoader<Texture, TextureSettings> {
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, settings.downFilter().getGlCode());
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings.upFilter().getGlCode());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, settings.filter().getGlCode());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings.filter().getGlCode());
 
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, internalFormat, GL_UNSIGNED_BYTE, data);
         if (settings.generateMipmap()) {

@@ -112,19 +112,19 @@ public enum KeyboardKey {
 
     private static final KeyboardKey[] values = values();
 
-    private final int glfwKey;
+    private final int glfwCode;
 
-    KeyboardKey(int glfwKey) {
-        this.glfwKey = glfwKey;
+    KeyboardKey(int glfwCode) {
+        this.glfwCode = glfwCode;
     }
 
-    public int glfwKey() {
-        return glfwKey;
+    public int glfwCode() {
+        return glfwCode;
     }
 
     public static KeyboardKey fromGlfw(int key) {
         for (KeyboardKey value : values) {
-            if(value.glfwKey == key) {
+            if(value.glfwCode == key) {
                 return value;
             }
         }

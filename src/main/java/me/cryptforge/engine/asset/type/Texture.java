@@ -1,14 +1,16 @@
 package me.cryptforge.engine.asset.type;
 
+import me.cryptforge.engine.Freeable;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Objects;
 
+import static org.lwjgl.opengl.GL11.glDeleteTextures;
 import static org.lwjgl.opengl.GL33.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL33.glBindTexture;
 
 
-public class Texture {
+public class Texture implements Freeable {
 
     private final int id;
     private final int width;
@@ -54,5 +56,10 @@ public class Texture {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public void free() {
+        glDeleteTextures(id);
     }
 }

@@ -1,5 +1,6 @@
 package me.cryptforge.engine.asset.type;
 
+import me.cryptforge.engine.Freeable;
 import me.cryptforge.engine.asset.Glyph;
 import org.jetbrains.annotations.ApiStatus;
 import org.lwjgl.stb.STBTTBakedChar;
@@ -14,7 +15,7 @@ import java.util.Map;
 
 import static org.lwjgl.stb.STBTruetype.*;
 
-public class Font {
+public class Font implements Freeable {
 
     private final STBTTFontinfo info;
     private final STBTTBakedChar.Buffer charData;
@@ -114,6 +115,7 @@ public class Font {
         return glyphs.get(codepoint);
     }
 
+    @Override
     public void free() {
         MemoryUtil.memFree(data);
         charData.free();

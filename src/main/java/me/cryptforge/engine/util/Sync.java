@@ -31,7 +31,7 @@ public class Sync {
     public static void sync(int fps) {
         if (fps <= 0) return;
 
-        long sleepTime = 1000000000 / fps; // nanoseconds to sleep this frame
+        long sleepTime = 1_000_000_000 / fps; // nanoseconds to sleep this frame
         // yieldTime + remainder micro & nano seconds if smaller than sleepTime
         long yieldTime = Math.min(sleepTime, variableYieldTime + sleepTime % (1000 * 1000));
         long overSleep = 0; // time the sync goes over by
