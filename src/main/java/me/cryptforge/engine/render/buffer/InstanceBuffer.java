@@ -82,8 +82,9 @@ public final class InstanceBuffer implements DrawBuffer {
         }
         instanceBuffer.put(r).put(g).put(b).put(a).put(texWidth).put(texHeight).put(texX).put(texY);
 
-        renderer.getProjectionMatrix().mul(matrix,matrix);
-        matrix.get(instanceBuffer);
+        final Matrix3x2f projectionModel = new Matrix3x2f();
+        renderer.getProjectionMatrix().mul(matrix, projectionModel);
+        projectionModel.get(instanceBuffer);
         instanceBuffer.position(instanceBuffer.position() + 6);
         count++;
         return this;
