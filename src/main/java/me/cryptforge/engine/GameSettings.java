@@ -31,13 +31,13 @@ public record GameSettings(
             return this;
         }
 
-        public Builder worldSize(Vector2i size) {
-            this.worldSize = size;
+        public Builder worldSize(int width, int height) {
+            this.worldSize = new Vector2i(width, height);
             return this;
         }
 
-        public Builder windowSize(Vector2i size) {
-            this.windowSize = size;
+        public Builder windowSize(int width, int height) {
+            this.windowSize = new Vector2i(width, height);
             return this;
         }
 
