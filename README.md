@@ -11,6 +11,4 @@ The artifact is hosted on jitpack.
 
 ## Usage
 
-Extend `Application` then call `Application#run` to start the application.
-
-See [Demo](https://github.com/CryptForge/simple-game-engine/tree/main/demo) for examples.
+See [Demo](https://github.com/CryptForge/simple-game-engine/tree/main/demo).
