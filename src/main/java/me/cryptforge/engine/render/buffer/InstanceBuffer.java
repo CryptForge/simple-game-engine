@@ -1,5 +1,6 @@
 package me.cryptforge.engine.render.buffer;
 
+import me.cryptforge.engine.Engine;
 import me.cryptforge.engine.render.Renderer;
 import me.cryptforge.engine.render.VertexArrayObject;
 import me.cryptforge.engine.render.VertexBufferObject;
@@ -84,7 +85,7 @@ public final class InstanceBuffer implements DrawBuffer {
         }
         instanceBuffer.put(r).put(g).put(b).put(a).put(texWidth).put(texHeight).put(texX).put(texY);
 
-        renderer.getProjectionMatrix().mul(matrix, this.matrix);
+        Engine.window().projectionMatrix().mul(matrix, this.matrix);
         this.matrix.get(instanceBuffer);
         instanceBuffer.position(instanceBuffer.position() + 6);
         count++;
@@ -97,6 +98,7 @@ public final class InstanceBuffer implements DrawBuffer {
             instanceBuffer.flip();
 
             instanceVbo.bind(GL_ARRAY_BUFFER);
+
             instanceVbo.uploadSubData(GL_ARRAY_BUFFER, 0, instanceBuffer);
 
             vao.bind();

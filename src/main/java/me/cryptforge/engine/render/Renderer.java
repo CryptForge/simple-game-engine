@@ -1,6 +1,5 @@
 package me.cryptforge.engine.render;
 
-import me.cryptforge.engine.Application;
 import me.cryptforge.engine.Drawable;
 import me.cryptforge.engine.Freeable;
 import me.cryptforge.engine.asset.Asset;
@@ -9,8 +8,6 @@ import me.cryptforge.engine.asset.type.Font;
 import me.cryptforge.engine.asset.type.Shader;
 import me.cryptforge.engine.asset.type.Texture;
 import me.cryptforge.engine.render.buffer.InstanceBuffer;
-import org.joml.Matrix3x2f;
-import org.joml.Vector2f;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,10 +19,6 @@ import static org.lwjgl.opengl.GL33.*;
 
 public class Renderer implements Freeable {
 
-    private final Application application;
-
-    private final Matrix3x2f projectionMatrix;
-
     private final InstanceBuffer instanceBuffer;
 
     private final SpriteBatch spriteBatch;
@@ -34,14 +27,9 @@ public class Renderer implements Freeable {
 
     private RenderBatch<?> currentBatch;
 
-    public Renderer(Application application) {
-        this.application = application;
-
+    public Renderer() {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        projectionMatrix = new Matrix3x2f()
-                .view(0f, application.getWorldWidth(), application.getWorldHeight(), 0f);
 
         Assets.load(loader -> {
             loader.shader("sprite", Asset.internal("shaders/sprite.vert"), Asset.internal("shaders/sprite.frag"));
@@ -79,6 +67,11 @@ public class Renderer implements Freeable {
                 }
             });
         }
+    }
+
+    public void clear(Color color) {
+        glClearColor(color.r(), color.g(), color.b(), color.a());
+        glClear(GL_COLOR_BUFFER_BIT);
     }
 
     public void spriteBatch(Texture texture, Consumer<SpriteBatch> actions) {
@@ -136,20 +129,6 @@ public class Renderer implements Freeable {
             texture.bind();
         }
         currentBatch.buffer().flush();
-    }
-
-    public Vector2f convertMouseToWorld(float mouseX, float mouseY) {
-        return projectionMatrix
-                .unproject(
-                        mouseX,
-                        application.getHeight() - mouseY,
-                        new int[]{0, 0, application.getWidth(), application.getHeight()},
-                        new Vector2f()
-                );
-    }
-
-    public Matrix3x2f getProjectionMatrix() {
-        return projectionMatrix;
     }
 
     @Override

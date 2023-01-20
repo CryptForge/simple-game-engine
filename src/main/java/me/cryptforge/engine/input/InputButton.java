@@ -2,7 +2,10 @@ package me.cryptforge.engine.input;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-public enum KeyboardKey {
+public enum InputButton {
+    MOUSE_LEFT(GLFW_MOUSE_BUTTON_LEFT),
+    MOUSE_MIDDLE(GLFW_MOUSE_BUTTON_MIDDLE),
+    MOUSE_RIGHT(GLFW_MOUSE_BUTTON_RIGHT),
     A(GLFW_KEY_A),
     B(GLFW_KEY_B),
     C(GLFW_KEY_C),
@@ -110,11 +113,11 @@ public enum KeyboardKey {
     PAGE_DOWN(GLFW_KEY_PAGE_DOWN),
     UNKNOWN(GLFW_KEY_UNKNOWN);
 
-    private static final KeyboardKey[] values = values();
+    private static final InputButton[] values = values();
 
     private final int glfwCode;
 
-    KeyboardKey(int glfwCode) {
+    InputButton(int glfwCode) {
         this.glfwCode = glfwCode;
     }
 
@@ -122,8 +125,8 @@ public enum KeyboardKey {
         return glfwCode;
     }
 
-    public static KeyboardKey fromGlfw(int key) {
-        for (KeyboardKey value : values) {
+    public static InputButton fromGlfw(int key) {
+        for (InputButton value : values) {
             if(value.glfwCode == key) {
                 return value;
             }

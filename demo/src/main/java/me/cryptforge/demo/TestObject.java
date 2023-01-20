@@ -1,7 +1,9 @@
 package me.cryptforge.demo;
 
 import me.cryptforge.engine.Drawable;
+import me.cryptforge.engine.Engine;
 import me.cryptforge.engine.asset.type.Texture;
+import me.cryptforge.engine.input.InputButton;
 import me.cryptforge.engine.render.Color;
 import org.joml.Matrix3x2f;
 import org.joml.Vector2f;
@@ -21,8 +23,10 @@ public final class TestObject implements Drawable {
     }
 
     public void update() {
-        transform()
-                .rotateAbout((float) (Math.random() / 2f), 0.5f, 0.5f);
+        if(Engine.input().isPressed(InputButton.SPACE)) {
+            transform()
+                    .rotateAbout((float) (Math.random() / 2f), 0.5f, 0.5f);
+        }
     }
 
     public void setVelocity(float x, float y) {
