@@ -2,32 +2,30 @@ package me.cryptforge.engine.system.impl;
 
 import me.cryptforge.engine.Engine;
 import me.cryptforge.engine.input.InputButton;
-import me.cryptforge.engine.input.listener.InputListener;
 import me.cryptforge.engine.input.InputState;
+import me.cryptforge.engine.input.InputListener;
 import me.cryptforge.engine.system.InputSystem;
 import me.cryptforge.engine.system.WindowSystem;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector2f;
 import org.lwjgl.system.MemoryStack;
 
+import java.lang.ref.WeakReference;
 import java.nio.DoubleBuffer;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.lwjgl.glfw.GLFW.*;
 
 public class InputSystemImpl implements InputSystem {
 
     private final long windowId;
-    private final Map<Integer, Integer> stateMap;
-    private final Set<InputListener> listeners;
+    private Map<InputButton, InputState> stateMap;
+    private List<WeakReference<InputListener>> listeners;
 
     public InputSystemImpl(long windowId) {
         this.windowId = windowId;
         this.stateMap = new HashMap<>();
-        this.listeners = new HashSet<>();
+        this.listeners = new ArrayList<>();
         glfwSetKeyCallback(windowId, (window, key, scancode, action, mods) -> handleInput(key, action));
         glfwSetMouseButtonCallback(windowId, (window, button, action, mods) -> handleInput(button, action));
     }
@@ -58,34 +56,44 @@ public class InputSystemImpl implements InputSystem {
     }
 
     @Override
-    public void addListener(InputListener listener) {
-        this.listeners.add(listener);
+    public boolean isPressed(@NotNull InputButton button) {
+        return stateMap.getOrDefault(button, InputState.RELEASED) == InputState.PRESSED;
     }
 
     @Override
-    public boolean isPressed(InputButton button) {
-        if(!stateMap.containsKey(button.glfwCode())) {
+    public void registerListener(@NotNull InputListener listener) {
+        listeners.add(new WeakReference<>(listener));
+    }
+
+    @Override
+    public void unregisterListener(@NotNull InputListener listener) {
+        listeners.removeIf(reference -> {
+            if (reference.get() == null || reference.get() == listener) {
+                reference.clear();
+                return true;
+            }
             return false;
-        }
-        final int state = stateMap.get(button.glfwCode());
-        return state == GLFW_PRESS;
+        });
     }
 
     private void handleInput(int code, int action) {
         final InputButton button = InputButton.fromGlfw(code);
         final InputState state = InputState.fromGlfw(action);
 
-        if (state != InputState.REPEAT) {
-            stateMap.put(code, action);
-        }
-
         if (button == null) {
             // TODO: Give some kind of warning
             return;
         }
-
-        for (InputListener listener : listeners) {
-            listener.handle(button, state);
+        if (state != InputState.REPEAT) {
+            stateMap.put(button, state);
         }
+
+        triggerListeners(button, state);
+    }
+
+    private void triggerListeners(InputButton button, InputState state) {
+        listeners.removeIf(ref -> ref.get() == null);
+
+        listeners.forEach(ref -> Objects.requireNonNull(ref.get()).handleInput(button, state));
     }
 }

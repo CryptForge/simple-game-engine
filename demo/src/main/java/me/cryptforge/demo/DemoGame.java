@@ -6,16 +6,16 @@ import me.cryptforge.engine.asset.Asset;
 import me.cryptforge.engine.asset.Assets;
 import me.cryptforge.engine.asset.TextureFilter;
 import me.cryptforge.engine.asset.TextureSettings;
-import me.cryptforge.engine.input.listener.InputListener;
-import me.cryptforge.engine.input.InputState;
 import me.cryptforge.engine.input.InputButton;
+import me.cryptforge.engine.input.InputListener;
+import me.cryptforge.engine.input.InputState;
 import me.cryptforge.engine.render.Color;
 import me.cryptforge.engine.render.Renderer;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class DemoGame implements Game {
+public class DemoGame implements Game, InputListener {
 
     private final Set<TestObject> objects = new HashSet<>();
     private final Color clearColor = new Color(0, 0, 120, 1f);
@@ -28,12 +28,13 @@ public class DemoGame implements Game {
                     TextureSettings.builder()
                                    .mipmap(true)
                                    .filter(TextureFilter.LINEAR_MIPMAP_LINEAR)
-                                   .build());
+                                   .build()
+            );
             loader.texture("button", Asset.internal("textures/button.png"), TextureSettings.defaultSettings());
             loader.texture(
                     "debug",
                     Asset.internal("textures/debug_texture.png"),
-                    TextureSettings.pixelSettings()
+                    TextureSettings.builder().filter(TextureFilter.NEAREST).build()
             );
             loader.font("font", Asset.internal("fonts/NotoSans-Regular.ttf"), 96);
         });
@@ -46,18 +47,22 @@ public class DemoGame implements Game {
             }
         }
 
-        final var input = Engine.input();
-
-        input.addListener(InputListener.filtered(InputButton.ESC, InputState.PRESSED, () -> {
-            System.out.println("Closing game...");
-            Engine.exit();
-        }));
+        registerInput();
     }
 
     @Override
     public void update() {
         time += 1f;
         objects.forEach(TestObject::update);
+    }
+
+    @Override
+    public void handleInput(InputButton button, InputState state) {
+        System.out.println("button: " + button + " state: " + state);
+        if(button == InputButton.ESC) {
+            System.out.println("Closing game");
+            Engine.exit();
+        }
     }
 
     @Override
