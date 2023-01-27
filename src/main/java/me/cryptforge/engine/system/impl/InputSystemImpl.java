@@ -2,6 +2,7 @@ package me.cryptforge.engine.system.impl;
 
 import me.cryptforge.engine.Engine;
 import me.cryptforge.engine.input.InputButton;
+import me.cryptforge.engine.input.InputModifiers;
 import me.cryptforge.engine.input.InputState;
 import me.cryptforge.engine.input.InputListener;
 import me.cryptforge.engine.system.InputSystem;
@@ -26,8 +27,9 @@ public class InputSystemImpl implements InputSystem {
         this.windowId = windowId;
         this.stateMap = new HashMap<>();
         this.listeners = new ArrayList<>();
-        glfwSetKeyCallback(windowId, (window, key, scancode, action, mods) -> handleInput(key, action));
-        glfwSetMouseButtonCallback(windowId, (window, button, action, mods) -> handleInput(button, action));
+        glfwSetKeyCallback(windowId, (window, key, scancode, action, mods) -> handleInput(key, action,mods));
+        glfwSetMouseButtonCallback(windowId, (window, button, action, mods) -> handleInput(button, action,mods));
+        glfwSetCharCallback(windowId, (window, codepoint) -> handleChar(codepoint));
     }
 
     @Override
@@ -76,7 +78,7 @@ public class InputSystemImpl implements InputSystem {
         });
     }
 
-    private void handleInput(int code, int action) {
+    private void handleInput(int code, int action, int mods) {
         final InputButton button = InputButton.fromGlfw(code);
         final InputState state = InputState.fromGlfw(action);
 
@@ -88,12 +90,24 @@ public class InputSystemImpl implements InputSystem {
             stateMap.put(button, state);
         }
 
-        triggerListeners(button, state);
+        triggerInput(button, state, new InputModifiers(mods));
     }
 
-    private void triggerListeners(InputButton button, InputState state) {
+    private void handleChar(int codepoint) {
+        final char character = (char) codepoint;
+
+        triggerChar(character);
+    }
+
+    private void triggerInput(InputButton button, InputState state, InputModifiers modifiers) {
         listeners.removeIf(ref -> ref.get() == null);
 
-        listeners.forEach(ref -> Objects.requireNonNull(ref.get()).handleInput(button, state));
+        listeners.forEach(ref -> Objects.requireNonNull(ref.get()).handleInput(button, state, modifiers));
+    }
+
+    private void triggerChar(char character) {
+        listeners.removeIf(ref -> ref.get() == null);
+
+        listeners.forEach(ref -> Objects.requireNonNull(ref.get()).handleChar(character));
     }
 }

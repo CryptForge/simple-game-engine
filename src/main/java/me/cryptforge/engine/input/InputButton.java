@@ -121,6 +121,18 @@ public enum InputButton {
         this.glfwCode = glfwCode;
     }
 
+    public boolean isNumber() {
+        return switch (this) {
+            case NUM_0,NUM_1,NUM_2,NUM_3,NUM_4,NUM_5,NUM_6,NUM_7,NUM_8,NUM_9, NUMPAD_0, NUMPAD_1, NUMPAD_2, NUMPAD_3, NUMPAD_4, NUMPAD_5, NUMPAD_6, NUMPAD_7, NUMPAD_8, NUMPAD_9 -> true;
+            default -> false;
+        };
+    }
+
+    public boolean isShift() {
+        return this == LEFT_SHIFT || this == RIGHT_SHIFT;
+    }
+
+
     public int glfwCode() {
         return glfwCode;
     }

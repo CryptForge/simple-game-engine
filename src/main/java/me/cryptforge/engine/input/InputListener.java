@@ -4,7 +4,11 @@ import me.cryptforge.engine.Engine;
 
 public interface InputListener {
 
-    void handleInput (InputButton button, InputState state);
+    default void handleInput(InputButton button, InputState state, InputModifiers modifiers) {
+    }
+
+    default void handleChar(char character) {
+    }
 
     default void registerInput() {
         Engine.input().registerListener(this);

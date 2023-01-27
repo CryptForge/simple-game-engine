@@ -1,5 +1,6 @@
 package me.cryptforge.demo;
 
+import me.cryptforge.demo.ui.InputField;
 import me.cryptforge.engine.Game;
 import me.cryptforge.engine.Engine;
 import me.cryptforge.engine.asset.Asset;
@@ -8,6 +9,7 @@ import me.cryptforge.engine.asset.TextureFilter;
 import me.cryptforge.engine.asset.TextureSettings;
 import me.cryptforge.engine.input.InputButton;
 import me.cryptforge.engine.input.InputListener;
+import me.cryptforge.engine.input.InputModifiers;
 import me.cryptforge.engine.input.InputState;
 import me.cryptforge.engine.render.Color;
 import me.cryptforge.engine.render.Renderer;
@@ -19,6 +21,7 @@ public class DemoGame implements Game, InputListener {
 
     private final Set<TestObject> objects = new HashSet<>();
     private final Color clearColor = new Color(0, 0, 120, 1f);
+    private InputField inputField;
     private double time;
 
     @Override
@@ -47,6 +50,12 @@ public class DemoGame implements Game, InputListener {
             }
         }
 
+        inputField = new InputField(Assets.font("font"), 100, 100, "", Color.WHITE, Color.BLACK, value -> {
+            System.out.println(value);
+            inputField.clear();
+        });
+        inputField.registerInput();
+
         registerInput();
     }
 
@@ -57,9 +66,8 @@ public class DemoGame implements Game, InputListener {
     }
 
     @Override
-    public void handleInput(InputButton button, InputState state) {
-        System.out.println("button: " + button + " state: " + state);
-        if(button == InputButton.ESC) {
+    public void handleInput(InputButton button, InputState state, InputModifiers modifiers) {
+        if (button == InputButton.ESC) {
             System.out.println("Closing game");
             Engine.exit();
         }
@@ -90,9 +98,7 @@ public class DemoGame implements Game, InputListener {
             batch.drawTextCentered("Time: " + time, Engine.window().worldWidth() / 2f, 80, Color.GREEN);
         });
 
-        renderer.shapeBatch(batch -> {
-            batch.drawSquare(100, 100, 100, Color.RED);
-        });
+        inputField.render(renderer);
     }
 
     @Override
