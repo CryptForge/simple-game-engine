@@ -1,8 +1,7 @@
-package me.cryptforge.demo.ui;
+package me.cryptforge.engine.ui.component;
 
 import me.cryptforge.engine.asset.type.Font;
 import me.cryptforge.engine.input.InputButton;
-import me.cryptforge.engine.input.InputListener;
 import me.cryptforge.engine.input.InputModifiers;
 import me.cryptforge.engine.input.InputState;
 import me.cryptforge.engine.render.Color;
@@ -11,42 +10,49 @@ import me.cryptforge.engine.util.MathUtil;
 
 import java.util.function.Consumer;
 
-public class InputField implements InputListener {
+public class InputFieldComponent implements Component {
 
     private final Font font;
-    private final float x, y;
     private final Color color;
     private final Color selectorColor;
-    private StringBuilder value;
-    private Consumer<String> onConfirm;
+    private final StringBuilder value;
+    private final Consumer<String> onConfirm;
     private int selector = 0;
 
-    public InputField(Font font, float x, float y, String defaultValue, Color color, Color selectorColor, Consumer<String> onConfirm) {
+    InputFieldComponent(Font font, String defaultValue, Color color, Color selectorColor, Consumer<String> onConfirm) {
         this.font = font;
         this.color = color;
         this.selectorColor = selectorColor;
         this.value = new StringBuilder(defaultValue);
         this.onConfirm = onConfirm;
-        this.x = x;
-        this.y = y;
     }
 
-    public void render(Renderer renderer) {
+    @Override
+    public void render(Renderer renderer, float x, float y) {
         renderer.textBatch(font, batch -> {
             batch.drawText(value.toString(), x, y, color);
         });
 
         renderer.shapeBatch(batch -> {
-            final float x = this.x + font.getTextWidth(value.substring(0, selector));
-            final float height = (font.getAscent() - font.getDescent()) * font.getScale();
+            final float selectorX = x + font.getTextWidth(value.substring(0, selector));
             batch.drawRectangle(
-                    x,
+                    selectorX,
                     y,
-                    4,
-                    height,
+                    1,
+                    height(),
                     selectorColor
             );
         });
+    }
+
+    @Override
+    public float width() {
+        return font.getTextWidth(value.toString());
+    }
+
+    @Override
+    public float height() {
+        return (font.getAscent() - font.getDescent()) * font.getScale();
     }
 
     @Override
@@ -55,7 +61,7 @@ public class InputField implements InputListener {
             return;
         }
         switch (button) {
-            case ENTER -> onConfirm.accept(value.toString());
+            case ENTER -> submit();
             case LEFT -> left(modifiers.isControlHeld());
             case RIGHT -> right(modifiers.isControlHeld());
             case BACKSPACE -> backspace(modifiers.isControlHeld());
@@ -80,6 +86,14 @@ public class InputField implements InputListener {
     public void clear() {
         this.value.delete(0, this.value.length());
         selector = 0;
+    }
+
+    private void submit() {
+        if(value.isEmpty()) {
+            return;
+        }
+        onConfirm.accept(value.toString());
+        clear();
     }
 
     private void left(boolean ctrl) {
@@ -125,7 +139,7 @@ public class InputField implements InputListener {
     private int rightCtrlTarget() {
         for (int i = selector; i < value.length(); i++) {
             final char c = value.charAt(i);
-            if (c == ' ' && i != selector) {
+            if (isCtrlTarget(c) && i != selector) {
                 return i + 1;
             }
         }
@@ -135,14 +149,14 @@ public class InputField implements InputListener {
     private int leftCtrlTarget() {
         for (int i = selector - 1; i >= 0; i--) {
             final char c = value.charAt(i);
-            if (c == ' ' && i != selector - 1) {
+            if (isCtrlTarget(c) && i != selector - 1) {
                 return i + 1;
             }
         }
         return 0;
     }
 
-    private char currentChar() {
-        return value.charAt(selector);
+    private boolean isCtrlTarget(char c) {
+        return !Character.isAlphabetic(c) && !Character.isDigit(c);
     }
 }

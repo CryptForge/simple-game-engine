@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
     implementation(rootProject)
+    implementation(project("::ui"))
     implementation("org.joml:joml:1.10.5")
 }
 
