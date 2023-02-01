@@ -1,13 +1,13 @@
 package me.cryptforge.engine.render;
 
-import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL46.*;
 
 public class VertexArrayObject {
 
     private final int id;
 
     public VertexArrayObject() {
-        this.id = glGenVertexArrays();
+        this.id = glCreateVertexArrays();
     }
 
     public void bind() {
@@ -22,7 +22,18 @@ public class VertexArrayObject {
         glDeleteVertexArrays(id);
     }
 
-    public int getId() {
+    public void defineAttribute(int index, int size, int stride, int offset, VertexBufferObject source) {
+        glEnableVertexArrayAttrib(id, index);
+        glVertexArrayVertexBuffer(id, index, source.id(), offset, stride);
+        glVertexArrayAttribFormat(id, index, size, GL_FLOAT, false, 0);
+        glVertexArrayAttribBinding(id, index, index);
+    }
+
+    public void defineDivisor(int index, int divisor) {
+        glVertexArrayBindingDivisor(id,index,divisor);
+    }
+
+    public int id() {
         return id;
     }
 

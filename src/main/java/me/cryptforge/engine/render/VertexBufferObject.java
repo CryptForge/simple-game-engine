@@ -2,41 +2,37 @@ package me.cryptforge.engine.render;
 
 import java.nio.FloatBuffer;
 
-import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL46.*;
 
 public class VertexBufferObject {
 
     private final int id;
 
     public VertexBufferObject() {
-        this.id = glGenBuffers();
+        this.id = glCreateBuffers();
     }
 
     public void bind(int target) {
         glBindBuffer(target, id);
     }
 
-    public void uploadData(int target, long size, int usage) {
-        glBufferData(target, size, usage);
+    public void uploadData(long size, int usage) {
+        glNamedBufferData(id, size, usage);
     }
 
-    public void uploadData(int target, float[] data,int usage) {
-        glBufferData(target,data,usage);
+    public void uploadData(float[] data, int usage) {
+        glNamedBufferData(id, data, usage);
     }
 
-    public void uploadData(int target, FloatBuffer data, int usage) {
-        glBufferData(target, data, usage);
-    }
-
-    public void uploadSubData(int target, long offset, FloatBuffer data) {
-        glBufferSubData(target, offset, data);
+    public void uploadSubData(long offset, FloatBuffer data) {
+        glNamedBufferSubData(id, offset, data);
     }
 
     public void delete() {
         glDeleteBuffers(id);
     }
 
-    public int getId() {
+    public int id() {
         return id;
     }
 

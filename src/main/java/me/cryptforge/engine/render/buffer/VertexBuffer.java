@@ -8,7 +8,6 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.nio.FloatBuffer;
 
-import static me.cryptforge.engine.util.GLUtils.initAttribute;
 import static org.lwjgl.opengl.GL33.*;
 
 @Deprecated
@@ -33,12 +32,10 @@ public final class VertexBuffer implements DrawBuffer {
 
     @Override
     public void init() {
-        vao.bind();
-        vbo.bind(GL_ARRAY_BUFFER);
-        initAttribute(0, 4, VERTEX_SIZE * Float.BYTES, 0); // coordinates (vec4)
-        initAttribute(1, 4, VERTEX_SIZE * Float.BYTES, 4 * Float.BYTES); // color (vec4)
+        vao.defineAttribute(0, 4, VERTEX_SIZE * Float.BYTES, 0, vbo); // coordinates (vec4)
+        vao.defineAttribute(1, 4, VERTEX_SIZE * Float.BYTES, 4 * Float.BYTES, vbo); // color (vec4)
 
-        vbo.uploadData(GL_ARRAY_BUFFER, (long) capacity * VERTEX_SIZE * Float.BYTES, GL_DYNAMIC_DRAW);
+        vbo.uploadData((long) capacity * VERTEX_SIZE * Float.BYTES, GL_DYNAMIC_DRAW);
     }
 
     private VertexBuffer putVertex(float x, float y, float textureX, float textureY, float r, float g, float b, float a) {
@@ -72,7 +69,7 @@ public final class VertexBuffer implements DrawBuffer {
             buffer.flip();
 
             vbo.bind(GL_ARRAY_BUFFER);
-            vbo.uploadSubData(GL_ARRAY_BUFFER, 0, buffer);
+            vbo.uploadSubData(0, buffer);
 
             vao.bind();
             glDrawArrays(GL_TRIANGLES, 0, count * 6);

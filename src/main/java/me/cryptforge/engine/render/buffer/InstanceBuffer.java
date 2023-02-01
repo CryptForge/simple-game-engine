@@ -10,8 +10,7 @@ import org.lwjgl.system.MemoryUtil;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
-import static me.cryptforge.engine.util.GLUtils.initAttribute;
-import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL46.*;
 
 public final class InstanceBuffer implements DrawBuffer {
 
@@ -40,10 +39,8 @@ public final class InstanceBuffer implements DrawBuffer {
 
     @Override
     public void init() {
-        vao.bind();
-        vertexVbo.bind(GL_ARRAY_BUFFER);
         // init vertex attributes
-        initAttribute(0, 4, 4 * Float.BYTES, 0); // coordinates (vec4)
+        vao.defineAttribute(0, 4, 4 * Float.BYTES, 0, vertexVbo);
 
         // Upload vertices
         final float[] vertices = new float[]{
@@ -52,31 +49,32 @@ public final class InstanceBuffer implements DrawBuffer {
                 1, 0, 1, 0,
                 1, 1, 1, 1
         };
-        vertexVbo.uploadData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW);
+        vertexVbo.uploadData(vertices, GL_STATIC_DRAW);
 
-        instanceVbo.bind(GL_ARRAY_BUFFER);
         // init instance attributes
-        initAttribute(1, 4, INSTANCE_SIZE * Float.BYTES, 0); // color (vec4)
-        initAttribute(2, 4, INSTANCE_SIZE * Float.BYTES, 4 * Float.BYTES); // uvs (vec4)
+        vao.defineAttribute(1, 4, INSTANCE_SIZE * Float.BYTES, 0, instanceVbo); // color (vec4)
+        vao.defineAttribute(2, 4, INSTANCE_SIZE * Float.BYTES, 4 * Float.BYTES, instanceVbo); // uvs (vec4)
 
         // model matrix (vec2 vec2 vec2)
-        initAttribute(3, 2, INSTANCE_SIZE * Float.BYTES, 8 * Float.BYTES);
-        initAttribute(4, 2, INSTANCE_SIZE * Float.BYTES, 10 * Float.BYTES);
-        initAttribute(5, 2, INSTANCE_SIZE * Float.BYTES, 12 * Float.BYTES);
+        vao.defineAttribute(3, 2, INSTANCE_SIZE * Float.BYTES, 8 * Float.BYTES, instanceVbo);
+        vao.defineAttribute(4, 2, INSTANCE_SIZE * Float.BYTES, 10 * Float.BYTES, instanceVbo);
+        vao.defineAttribute(5, 2, INSTANCE_SIZE * Float.BYTES, 12 * Float.BYTES, instanceVbo);
 
-        glVertexAttribDivisor(1, 1);
-        glVertexAttribDivisor(2, 1);
-        glVertexAttribDivisor(3, 1);
-        glVertexAttribDivisor(4, 1);
-        glVertexAttribDivisor(5, 1);
+        vao.defineDivisor(1, 1);
+        vao.defineDivisor(2, 1);
+        vao.defineDivisor(3, 1);
+        vao.defineDivisor(4, 1);
+        vao.defineDivisor(5, 1);
 
         // set instance vbo buffer size
         final long size = (long) capacity * INSTANCE_SIZE * Float.BYTES;
-        instanceVbo.uploadData(GL_ARRAY_BUFFER, size, GL_DYNAMIC_DRAW);
+        instanceVbo.uploadData(size, GL_DYNAMIC_DRAW);
 
         // set indices
         indexBuffer.put(new byte[]{0, 1, 3, 0, 3, 2});
         indexBuffer.flip();
+
+        vao.bind();
     }
 
     public InstanceBuffer putInstance(float r, float g, float b, float a, float texWidth, float texHeight, float texX, float texY, Matrix3x2f matrix) {
@@ -97,13 +95,9 @@ public final class InstanceBuffer implements DrawBuffer {
         if (count > 0) {
             instanceBuffer.flip();
 
-            instanceVbo.bind(GL_ARRAY_BUFFER);
+            instanceVbo.uploadSubData(0, instanceBuffer);
 
-            instanceVbo.uploadSubData(GL_ARRAY_BUFFER, 0, instanceBuffer);
-
-            vao.bind();
             glDrawElementsInstanced(GL_TRIANGLES, indexBuffer, count);
-            vao.unbind();
 
             clear();
         }
