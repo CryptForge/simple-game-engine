@@ -20,8 +20,8 @@ import static org.lwjgl.glfw.GLFW.*;
 public class InputSystemImpl implements InputSystem {
 
     private final long windowId;
-    private Map<InputButton, InputState> stateMap;
-    private List<WeakReference<InputListener>> listeners;
+    private final Map<InputButton, InputState> stateMap;
+    private final List<WeakReference<InputListener>> listeners;
 
     public InputSystemImpl(long windowId) {
         this.windowId = windowId;

@@ -71,7 +71,7 @@ public class Renderer implements Freeable {
 
     public void clear(Color color) {
         glClearColor(color.r(), color.g(), color.b(), color.a());
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
     public void spriteBatch(Texture texture, Consumer<SpriteBatch> actions) {

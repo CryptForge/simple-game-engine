@@ -24,7 +24,7 @@ public final class InstanceBuffer implements DrawBuffer {
     private final ByteBuffer indexBuffer;
     private final Matrix3x2f matrix;
     private final long capacity;
-    private GLFence[] fences;
+    private final GLFence[] fences;
     private int count;
     private int bufferOffset = 0;
 

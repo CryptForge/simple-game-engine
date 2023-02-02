@@ -31,8 +31,8 @@ public final class SpriteBatch extends RenderBatch<InstanceBuffer> {
                 matrix,
                 0,
                 0,
-                getTexture().getWidth(),
-                getTexture().getHeight(),
+                getTexture().width(),
+                getTexture().height(),
                 color
         );
     }
@@ -45,10 +45,10 @@ public final class SpriteBatch extends RenderBatch<InstanceBuffer> {
     }
 
     public void drawSprite(Matrix3x2f matrix, float minTexX, float minTexY, float maxTexX, float maxTexY, Color color) {
-        final float texX = minTexX / getTexture().getWidth();
-        final float texY = minTexY / getTexture().getHeight();
-        final float texSizeX = (maxTexX - minTexX) / getTexture().getWidth();
-        final float texSizeY = (maxTexY - minTexY) / getTexture().getHeight();
+        final float texX = minTexX / getTexture().width();
+        final float texY = minTexY / getTexture().height();
+        final float texSizeX = (maxTexX - minTexX) / getTexture().width();
+        final float texSizeY = (maxTexY - minTexY) / getTexture().height();
 
         buffer().putInstance(
                 color.r(),

@@ -17,8 +17,8 @@ public class InputField implements InputListener {
     private final float x, y;
     private final Color color;
     private final Color selectorColor;
-    private StringBuilder value;
-    private Consumer<String> onConfirm;
+    private final StringBuilder value;
+    private final Consumer<String> onConfirm;
     private int selector = 0;
 
     public InputField(Font font, float x, float y, String defaultValue, Color color, Color selectorColor, Consumer<String> onConfirm) {
