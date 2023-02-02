@@ -90,16 +90,16 @@ public final class InstanceBuffer implements DrawBuffer {
         }
         final int index = (int) getBufferIndex();
         instanceBuffer.putFloat(index, r)
-                      .putFloat(index + floatBytes(1), g)
-                      .putFloat(index + floatBytes(2), b)
-                      .putFloat(index + floatBytes(3), a)
-                      .putFloat(index + floatBytes(4), texWidth)
-                      .putFloat(index + floatBytes(5), texHeight)
-                      .putFloat(index + floatBytes(6), texX)
-                      .putFloat(index + floatBytes(7), texY);
+                      .putFloat(index + Float.BYTES, g)
+                      .putFloat(index + (2 * Float.BYTES), b)
+                      .putFloat(index + (3 * Float.BYTES), a)
+                      .putFloat(index + (4 * Float.BYTES), texWidth)
+                      .putFloat(index + (5 * Float.BYTES), texHeight)
+                      .putFloat(index + (6 * Float.BYTES), texX)
+                      .putFloat(index + (7 * Float.BYTES), texY);
 
         Engine.window().projectionMatrix().mul(matrix, this.matrix);
-        this.matrix.get(index + floatBytes(8), instanceBuffer);
+        this.matrix.get(index + (8 * Float.BYTES), instanceBuffer);
         count++;
         return this;
     }
@@ -153,9 +153,5 @@ public final class InstanceBuffer implements DrawBuffer {
 
     private long totalBufferSize() {
         return bufferSize() * 3;
-    }
-
-    private int floatBytes(int value) {
-        return value * Float.BYTES;
     }
 }

@@ -60,6 +60,15 @@ final class GameProcess {
     }
 
     public void run() {
+        // Weird hack to increase Thread.sleep accuracy
+        final Thread accuracyThread = new Thread(() -> {
+            try {
+                Thread.sleep(Long.MAX_VALUE);
+            } catch (InterruptedException ignored) {
+            }
+        });
+        accuracyThread.start();
+
         // Setup and show window
         windowSystem.center();
         glfwMakeContextCurrent(windowId);
@@ -69,7 +78,7 @@ final class GameProcess {
         // Prepare rendering
         GL.createCapabilities();
 
-        windowSystem.resize(windowSystem.width(),windowSystem.height());
+        windowSystem.resize(windowSystem.width(), windowSystem.height());
 
         // Update viewport on resize
         glfwSetFramebufferSizeCallback(windowId, (window, newWidth, newHeight) -> {
@@ -90,15 +99,17 @@ final class GameProcess {
             oldTime = glfwGetTime();
             accumulator += deltaTime;
 
+            glfwPollEvents();
+
             while (accumulator >= updateDelta) {
                 game.update();
                 accumulator -= updateDelta;
             }
 
+
             game.render(renderer);
 
             glfwSwapBuffers(windowId);
-            glfwPollEvents();
 
             Sync.sync(targetFramerate);
         }
@@ -111,6 +122,8 @@ final class GameProcess {
 
         Assets.freeAll();
         renderer.free();
+
+        accuracyThread.interrupt();
 
         game.onClose();
     }
