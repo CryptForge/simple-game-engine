@@ -91,7 +91,7 @@ public final class VertexBuffer implements DrawBuffer {
     }
 
     @Override
-    public int capacity() {
+    public long capacity() {
         return capacity;
     }
 

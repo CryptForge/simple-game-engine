@@ -1,5 +1,6 @@
 package me.cryptforge.engine.render;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL46.*;
@@ -26,6 +27,22 @@ public class VertexBufferObject {
 
     public void uploadSubData(long offset, FloatBuffer data) {
         glNamedBufferSubData(id, offset, data);
+    }
+
+    public void bufferStorage(long size, int flags) {
+        glNamedBufferStorage(id, size, flags);
+    }
+
+    public ByteBuffer mapRange(long offset, long length, int flags) {
+        return glMapNamedBufferRange(id, offset, length, flags);
+    }
+
+    public ByteBuffer map(int access) {
+        return glMapNamedBuffer(id, access);
+    }
+
+    public boolean unmap() {
+        return glUnmapNamedBuffer(id);
     }
 
     public void delete() {

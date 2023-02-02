@@ -42,9 +42,9 @@ public class DemoGame implements Game, InputListener {
             loader.font("font", Asset.internal("fonts/NotoSans-Regular.ttf"), 96);
         });
 
-        final int size = 40;
-        for (int x = 0; x < 100; x++) {
-            for (int y = 0; y < 50; y++) {
+        final int size = 50;
+        for (int x = 0; x < 50; x++) {
+            for (int y = 0; y < 10; y++) {
                 final TestObject object = new TestObject(Assets.texture("test"), x * size, y * size, size);
                 objects.add(object);
             }

@@ -10,7 +10,7 @@ public interface DrawBuffer extends Freeable {
 
     void clear();
 
-    int capacity();
+    long capacity();
 
     int count();
 

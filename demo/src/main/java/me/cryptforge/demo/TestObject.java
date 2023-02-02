@@ -25,7 +25,7 @@ public final class TestObject implements Drawable {
     public void update() {
         if(Engine.input().isPressed(InputButton.SPACE)) {
             transform()
-                    .rotateAbout((float) (Math.random() / 2f), 0.5f, 0.5f);
+                    .rotateAbout(0.01f, 0.5f, 0.5f);
         }
     }
 

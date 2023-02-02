@@ -1,6 +1,7 @@
 package me.cryptforge.engine.render.buffer;
 
 import me.cryptforge.engine.Engine;
+import me.cryptforge.engine.render.GLFence;
 import me.cryptforge.engine.render.Renderer;
 import me.cryptforge.engine.render.VertexArrayObject;
 import me.cryptforge.engine.render.VertexBufferObject;
@@ -8,7 +9,6 @@ import org.joml.Matrix3x2f;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL46.*;
 
@@ -20,19 +20,30 @@ public final class InstanceBuffer implements DrawBuffer {
     private final VertexArrayObject vao;
     private final VertexBufferObject vertexVbo;
     private final VertexBufferObject instanceVbo;
-    private final FloatBuffer instanceBuffer;
+    private final ByteBuffer instanceBuffer;
     private final ByteBuffer indexBuffer;
     private final Matrix3x2f matrix;
-    private final int capacity;
+    private final long capacity;
+    private GLFence[] fences;
     private int count;
+    private int bufferOffset = 0;
 
-    public InstanceBuffer(Renderer renderer, int capacity) {
+    public InstanceBuffer(Renderer renderer, long capacity) {
         this.renderer = renderer;
         this.capacity = capacity;
         vao = new VertexArrayObject();
         vertexVbo = new VertexBufferObject();
         instanceVbo = new VertexBufferObject();
-        instanceBuffer = MemoryUtil.memAllocFloat(capacity * INSTANCE_SIZE);
+        fences = new GLFence[]{
+                new GLFence(),
+                new GLFence(),
+                new GLFence()
+        };
+
+        final int flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+        instanceVbo.bufferStorage(totalBufferSize(), flags);
+        instanceBuffer = instanceVbo.mapRange(0, totalBufferSize(), flags);
+
         indexBuffer = MemoryUtil.memAlloc(6);
         matrix = new Matrix3x2f();
     }
@@ -66,10 +77,6 @@ public final class InstanceBuffer implements DrawBuffer {
         vao.defineDivisor(4, 1);
         vao.defineDivisor(5, 1);
 
-        // set instance vbo buffer size
-        final long size = (long) capacity * INSTANCE_SIZE * Float.BYTES;
-        instanceVbo.uploadData(size, GL_DYNAMIC_DRAW);
-
         // set indices
         indexBuffer.put(new byte[]{0, 1, 3, 0, 3, 2});
         indexBuffer.flip();
@@ -81,11 +88,18 @@ public final class InstanceBuffer implements DrawBuffer {
         if (!hasSpace(1)) {
             renderer.flushBuffer();
         }
-        instanceBuffer.put(r).put(g).put(b).put(a).put(texWidth).put(texHeight).put(texX).put(texY);
+        final int index = (int) getBufferIndex();
+        instanceBuffer.putFloat(index, r)
+                      .putFloat(index + floatBytes(1), g)
+                      .putFloat(index + floatBytes(2), b)
+                      .putFloat(index + floatBytes(3), a)
+                      .putFloat(index + floatBytes(4), texWidth)
+                      .putFloat(index + floatBytes(5), texHeight)
+                      .putFloat(index + floatBytes(6), texX)
+                      .putFloat(index + floatBytes(7), texY);
 
         Engine.window().projectionMatrix().mul(matrix, this.matrix);
-        this.matrix.get(instanceBuffer);
-        instanceBuffer.position(instanceBuffer.position() + 6);
+        this.matrix.get(index + floatBytes(8), instanceBuffer);
         count++;
         return this;
     }
@@ -93,11 +107,14 @@ public final class InstanceBuffer implements DrawBuffer {
     @Override
     public void flush() {
         if (count > 0) {
-            instanceBuffer.flip();
+            fences[bufferOffset].lockBuffer();
 
-            instanceVbo.uploadSubData(0, instanceBuffer);
+            final int baseInstance = (int) ((bufferOffset * bufferSize()) / (INSTANCE_SIZE * Float.BYTES));
+            glDrawElementsInstancedBaseInstance(GL_TRIANGLES, indexBuffer, count, baseInstance);
 
-            glDrawElementsInstanced(GL_TRIANGLES, indexBuffer, count);
+            bufferOffset = (bufferOffset + 1) % 3;
+
+            fences[bufferOffset].waitBuffer();
 
             clear();
         }
@@ -105,22 +122,40 @@ public final class InstanceBuffer implements DrawBuffer {
 
     @Override
     public void clear() {
-        instanceBuffer.clear();
         count = 0;
     }
 
     @Override
     public void free() {
-        MemoryUtil.memFree(instanceBuffer);
+        instanceVbo.unmap();
+        instanceVbo.delete();
+        vertexVbo.delete();
     }
 
     @Override
-    public int capacity() {
+    public long capacity() {
         return capacity;
     }
 
     @Override
     public int count() {
         return count;
+    }
+
+    private long getBufferIndex() {
+        final long base = bufferOffset * bufferSize();
+        return base + ((long) count * INSTANCE_SIZE * Float.BYTES);
+    }
+
+    private long bufferSize() {
+        return capacity * INSTANCE_SIZE * Float.BYTES;
+    }
+
+    private long totalBufferSize() {
+        return bufferSize() * 3;
+    }
+
+    private int floatBytes(int value) {
+        return value * Float.BYTES;
     }
 }

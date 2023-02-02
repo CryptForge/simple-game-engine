@@ -12,6 +12,7 @@ public class Main {
                             .title("simple-game-engine demo")
                             .worldSize(1920, 1080)
                             .windowSize(854, 480)
+//                            .windowSize(1920, 1080)
                             .targetFps(60)
                             .updateRate(60)
                             .resizeable(true)

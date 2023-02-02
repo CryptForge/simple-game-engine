@@ -47,7 +47,7 @@ public class Renderer implements Freeable {
         textShader.use();
         textShader.setInt("bitmap", 0);
 
-        instanceBuffer = new InstanceBuffer(this, 25600);
+        instanceBuffer = new InstanceBuffer(this, 128000);
         instanceBuffer.init();
 
         spriteBatch = new SpriteBatch(instanceBuffer);
