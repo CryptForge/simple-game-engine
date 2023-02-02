@@ -67,6 +67,7 @@ final class GameProcess {
             } catch (InterruptedException ignored) {
             }
         });
+        accuracyThread.setDaemon(false);
         accuracyThread.start();
 
         // Setup and show window
@@ -105,7 +106,6 @@ final class GameProcess {
                 game.update();
                 accumulator -= updateDelta;
             }
-
 
             game.render(renderer);
 
