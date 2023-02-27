@@ -67,7 +67,7 @@ final class GameProcess {
             } catch (InterruptedException ignored) {
             }
         });
-        accuracyThread.setDaemon(false);
+        accuracyThread.setDaemon(true);
         accuracyThread.start();
 
         // Setup and show window
